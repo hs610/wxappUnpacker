@@ -49,25 +49,6 @@ function del(name){
 	ioEvent.encount();
 	fs.unlink(name,ioEvent.decount);
 }
-function formatJSON(obj){
-	let indent=' '.repeat(4);
-	function helper(obj,dep){
-		let ans="",spaceEnd=indent.repeat(dep),space=indent+spaceEnd;
-		if(obj===null||typeof obj=="undefined"){
-			return 'null';
-		}else if(obj instanceof Array){
-			if(obj.length==0)return '[]';
-			for(let elem of obj)ans+=',\n'+space+helper(elem,dep+1);
-			return '['+ans.slice(1)+"\n"+spaceEnd+']';
-		}else if(typeof obj=="object"){
-			let keys=Object.keys(obj);
-			if(keys.length==0)return '{}';
-			for(let key of keys)ans+=",\n"+space+helper(key,dep+1)+":"+helper(obj[key],dep+1);
-			return '{'+ans.slice(1)+"\n"+spaceEnd+'}';
-		}else return JSON.stringify(obj);
-	}
-	return helper(obj,0)+"\n";
-}
 function changeExt(name,ext=""){
 	return name.slice(0,name.lastIndexOf("."))+ext;
 }
@@ -120,6 +101,5 @@ function commandExecute(cb,helper){
 	while(!nxt.done&&!nxt.value.endsWith(".js"))nxt=iter.next();
 	doNext();
 }
-module.exports={formatJSON:formatJSON,mkdirs:mkdirs,get:get,save:save,toDir:toDir,del:del,
-	addIO:ioEvent.add,changeExt:changeExt,CntEvent:CntEvent,scanDirByExt:scanDirByExt,
-	commandExecute:commandExecute};
+module.exports={mkdirs:mkdirs,get:get,save:save,toDir:toDir,del:del,commandExecute:commandExecute,
+	addIO:ioEvent.add,changeExt:changeExt,CntEvent:CntEvent,scanDirByExt:scanDirByExt};
