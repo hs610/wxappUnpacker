@@ -64,7 +64,7 @@ function scanDirByExt(dir,ext,cb){
 				fs.stat(name,(err,stats)=>{
 					if(err)throw Error("Scan dir error: "+err);
 					if(stats.isDirectory())helper(name);
-					else if(stats.isFile()&&path.extname(name)==ext)result.push(name);
+					else if(stats.isFile()&&name.endsWith(ext))result.push(name);
 					scanEvent.decount();
 				});
 			}

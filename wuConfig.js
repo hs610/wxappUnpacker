@@ -11,7 +11,7 @@ function doConfig(configFile,cb){
 		app={pages:k,window:e.global.window,tabBar:e.tabBar,networkTimeout:e.networkTimeout};
 		if(typeof e.debug!="undefined")app.debug=e.debug;
 		for(let a in e.page)wu.save(path.resolve(dir,wu.changeExt(a,".json")),JSON.stringify(e.page[a].window,null,4));
-		wu.scanDirByExt(dir,".png",li=>{
+		wu.scanDirByExt(dir,"",li=>{//search all files
 			let digests=[],digestsEvent=new wu.CntEvent,rdir=path.resolve(dir);
 			function fixDir(dir){return dir.startsWith(rdir)?dir.slice(rdir.length+1):dir;}
 			digestsEvent.add(()=>{
