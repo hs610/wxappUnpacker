@@ -10,6 +10,14 @@ Wechat App(微信小程序, .wxapkg)解包及相关文件(.wxss, .json, .wxs, .w
 - `node wuWxss.js <dirs...>` 通过获取文件夹下的 page-frame.html 和其他 html 文件的内容，还原出编译前 wxss 文件的内容。
 - `node wuWxapkg.js [-d] <files...>` 将 wxapkg 文件解包，并将包中上述命令中所提的被编译/混合的文件自动地恢复原状。如果加上 -d 指令，就会保留编译/混合后所生成的新文件，否则会自动删去这些文件。
 
+### wxapkg 包的获取
+
+Android 手机最近使用过的微信小程序所对应的 wxapkg 包文件都存储在特定文件夹下，可通过以下命令查看：
+
+	adb pull /data/data/com.tencent.mm/MicroMsg/{User}/appbrand/pkg
+
+其中`{User}` 为当前用户的用户名，类似于 `2bc**************b65`。
+
 ### 局限
 
 - 实现中很多功能基于特定的版本(wcc-v0.6vv_20180111_fbi)和字符串搜索，所以不能很好的适应各种特殊情况。
