@@ -6,13 +6,11 @@
 
 这个包中的文件内容主要如下：
 
-```
-app-config.json
-app-service.js
-page-frame.html
-其他一堆放在各文件夹中的.html文件
-和源码包内位置和内容相同的图片等资源文件
-```
+- app-config.json
+- app-service.js
+- page-frame.html
+- 其他一堆放在各文件夹中的.html文件
+- 和源码包内位置和内容相同的图片等资源文件
 
 微信开发者工具并不能识别这些文件，它要求我们提供由`wxml/wxss/js/wxs/json`组成的源码才能进行模拟/调试。
 
@@ -20,7 +18,7 @@ page-frame.html
 
 注意到`app-service.js`中的内容由
 
-```
+```javascript
 define('xxx.js',function(...){
 //The content of xxx.js
 });require('xxx.js');
@@ -36,7 +34,7 @@ define('yyy.js',function(...){
 
 所有在 wxapkg 包中的 html 文件都调用了`setCssToHead`函数，其代码如下
 
-```
+```javascript
 var setCssToHead = function(file, _xcInvalid) {
     var Ca = {};
     var _C = [...arrays...];
@@ -80,7 +78,7 @@ var setCssToHead = function(file, _xcInvalid) {
 
 阅读这段代码可知，它把 wxss 代码拆分成几段数组，数组中的内容可以是一段将要作为 css 文件的字符串，也可以是一个表示 这里要添加一个公共后缀 或 这里要包含另一段代码 或 要将以 wxss 专供的 rpx 单位表达的数字换算成能由浏览器渲染的 px 单位所对应的数字 的数组。
 
-同时，它还将所有被 import 引用的 wxss 文件所对应的数组内嵌在该函数中的 _C 变量中。
+同时，它还将所有被`@import`引用的 wxss 文件所对应的数组内嵌在该函数中的 _C 变量中。
 
 我们可以修改`setCssToHead`，然后执行所有的`setCssToHead`，第一遍先判断出 _C 变量中所有的内容是哪个要被引用的 wxss 提供的，第二遍还原所有的 wxss。值得注意的是，可能出于兼容性原因，微信为很多属性自动补上含有`-webkit-`开头的版本，另外几乎所有的 tag 都加上了`wx-`前缀，并将`page`变成了`body`。通过一些 CSS 的 AST ，例如 [CSSTree](https://github.com/codenothing/CSSTree)，我们可以去掉这些东西。
 
@@ -92,7 +90,7 @@ app-config.json 中的`page`对象内就是其他各页面所对应的 json , �
 
 在 page-frame.html 中，我们找到了这样的内容
 
-```
+```javascript
 f_['a/comm.wxs'] = nv_require("p_a/comm.wxs");
 function np_0(){var nv_module={nv_exports:{}};nv_module.nv_exports = ({nv_bar:nv_some_msg,});return nv_module.nv_exports;}
 
@@ -115,7 +113,7 @@ f_['b/index.wxml']['some_commsb']();
 相比其他内容，这一段比较复杂，因为微信将原本 类 xml 格式的 wxml 文件直接编译成了 js 代码放入 page-frame.html 中，之后通过调用这些代码来构造 virtual-dom，进而渲染网页。
 首先，微信将所有要动态计算的变量放在了一个由函数构造的`z`数组中，构造部分代码如下：
 
-```
+```javascript
 (function(z){var a=11;function Z(ops){z.push(ops)}
 Z([3,'index']);
 Z([[8],'text',[[4],[[5],[[5],[[5],[1,1]],[1,2]],[1,3]]]]);
@@ -137,7 +135,7 @@ Z([[8],'text',[[4],[[5],[[5],[[5],[1,1]],[1,2]],[1,3]]]]);
 
 此外`wx:if`结构和`wx:for`可做递归处理。例如，对于如下`wx:if`结构:
 
-```
+```javascript
 var {name}=_v()
 _({parName},{name})
 if(_o({id1},e,s,gg)){oD.wxVkey=1
@@ -153,7 +151,7 @@ else{oD.wxVkey=3
 
 相当于将以下节点放入`{parName}`节点下(`z[{id1}]`应替换为对应的`z`数组中的值)：
 
-```
+```xml
 <block wx:if="z[{id1}]">
     <!--content1-->
 </block>
@@ -167,7 +165,7 @@ else{oD.wxVkey=3
 
 具体实现中可以将递归时创建好多个`block`，调用子函数时指明将放入`{name}`下(`_({name},{son})`)识别为放入对应`{block}`下。`wx:for`也可类似处理，例如：
 
-```
+```javascript
 var {name}=_v()
 _({parName},{name})
 var {funcName}=function(..,..,{fakeRoot},..){
@@ -180,7 +178,7 @@ _2({id},{funcName},..,..,..,..,'{item}','{index}','{key}')
 
 对应(`z[{id1}]`应替换为对应的`z`数组中的值)：
 
-```
+```xml
 <view wx:for="{z[{id}]}" wx:for-item="{item}" wx:for-index="{index}" wx:key="{key}">
     <!--content-->
 </view>
@@ -190,7 +188,7 @@ _2({id},{funcName},..,..,..,..,'{item}','{index}','{key}')
 
 除此之外，有时我们还要将一组代码标记为一个指令，例如下面：
 
-```
+```javascript
 var lK=_v()
 _({parName},lK)
 var aL=_o({isId},e,s,gg)
@@ -207,13 +205,13 @@ else _w(aL,x[0],11,26)
 
 对应于`{parName}`下添加如下节点:
 
-```
+```xml
 <template is="z[{isId}]" data="z[{dataId}]"></template>
 ```
 
 还有`import`和`include`的代码比较分散，但其实只要抓住重点的一句话就可以了，例如：
 
-```
+```javascript
 var {name}=e_[x[{to}]].i
 //Other code
 _ai({name},x[{from}],e_,x[{to}],..,..)
@@ -223,13 +221,13 @@ _ai({name},x[{from}],e_,x[{to}],..,..)
 
 对应与(其中的`x`是直接定义在 page-frame.html 中的字符串数组)：
 
-```
+```xml
 <import src="x[{from}]" />
 ```
 
 而`include`类似：
 
-```
+```javascript
 var {name}=e_[x[0]].j
 //Other code
 _ic(x[{from}],e_,x[{to}],..,..,..,..);
@@ -239,7 +237,7 @@ _ic(x[{from}],e_,x[{to}],..,..,..,..);
 
 对应与：
 
-```
+```xml
 <include src="x[{from}]" />
 ```
 
@@ -247,7 +245,7 @@ _ic(x[{from}],e_,x[{to}],..,..,..,..);
 
 通过解析 js 把 wxml 大概结构还原后，可能相比编译前的 wxml 显得臃肿，可以考虑自动简化，例如：
 
-```
+```xml
 <block wx:if="xxx">
     <view>
         <!--content-->
@@ -257,7 +255,7 @@ _ic(x[{from}],e_,x[{to}],..,..,..,..);
 
 可简化为：
 
-```
+```xml
 <view wx:if="xxx">
     <!--content-->
 </view>
