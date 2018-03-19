@@ -84,7 +84,7 @@ var setCssToHead = function(file, _xcInvalid) {
 
 ### json
 
-app-config.json 中的`page`对象内就是其他各页面所对应的 json , 直接还原即可，余下的内容便是 app.json 中的内容了，除了格式上要作相应转换外，微信还将`iconPath`的内容由原先指向图片文件的地址转换成`iconData`中图片内容的 base64 编码，索性原来的图片文件仍然保留在包内，通过比较`iconData`中的内容和其他包内文件，我们找到原始的`iconPath`。
+app-config.json 中的`page`对象内就是其他各页面所对应的 json , 直接还原即可，余下的内容便是 app.json 中的内容了，除了格式上要作相应转换外，微信还将`iconPath`的内容由原先指向图片文件的地址转换成`iconData`中图片内容的 base64 编码，所幸原来的图片文件仍然保留在包内，通过比较`iconData`中的内容和其他包内文件，我们找到原始的`iconPath`。
 
 ### wxs
 
