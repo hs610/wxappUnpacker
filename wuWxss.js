@@ -13,7 +13,7 @@ function cssRebuild(data){//need to bind this as {cssFile:__name__} before call
 				if(data.length==1&&data[0][0]==2)data=data[0][1];
 				else return "";
 			}
-			if(!actualPure[data]&&!blockCss.includes(cssFile)){
+			if(!actualPure[data]&&!blockCss.includes(path.basename(cssFile,'.html'))){
 				console.log("Regard "+cssFile+" as pure import file.");
 				actualPure[data]=cssFile;
 			}
@@ -57,8 +57,7 @@ function preRun(dir,frameFile,mainCode,files,cb){
 		});
 	}
 }
-function runOnce(test){
-	onlyTest=test;
+function runOnce(){
 	for(let name in runList)runVM(name,runList[name]);
 }
 function transformCss(style){
@@ -97,9 +96,18 @@ function doWxss(dir,cb){
 			let mainCode=oriCode.slice(oriCode.indexOf("setCssToHead"),oriCode.lastIndexOf(";var __pageFrameEndTime__"));
 			console.log("Guess wxss(first turn)...");
 			preRun(dir,frameFile,mainCode,files,()=>{
-				runOnce(true);
+				onlyTest=true;
+				runOnce();
+				onlyTest=false;
+				for(let id in pureData)if(!actualPure[id]){
+					let newFile=path.resolve(dir,"__wuBaseWxss__/"+id+".wxss");
+					console.log("Cannot find pure import for _C["+id+"], force to save it in ("+newFile+").");
+					id=Number.parseInt(id);
+					actualPure[id]=newFile;
+					cssRebuild.call({cssFile:newFile},id)();
+				}
 				console.log("Guess wxss(first turn) done.\nGenerate wxss(second turn)...");
-				runOnce(false)
+				runOnce()
 				console.log("Generate wxss(second turn) done.\nSave wxss...");
 				for(let name in result)wu.save(wu.changeExt(name,".wxss"),transformCss(result[name]));
 				let delFiles={};
