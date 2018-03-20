@@ -10,16 +10,16 @@ function header(buf){
 	console.log("\nHeader info:");
 	let firstMark=buf.readUInt8(0);
 	console.log("  firstMark: 0x%s",firstMark.toString(16));
-	let infoUnknown=buf.readUInt32BE(1);
-	console.log("  infoUnknown: ",infoUnknown);
-	let indexLength=buf.readUInt32BE(5);
-	console.log("  indexLength: ",indexLength);
-	let bodyLength=buf.readUInt32BE(9);
-	console.log("  bodyLength: ",bodyLength);
+	let unknownInfo=buf.readUInt32BE(1);
+	console.log("  unknownInfo: ",unknownInfo);
+	let infoListLength=buf.readUInt32BE(5);
+	console.log("  infoListLength: ",infoListLength);
+	let dataLength=buf.readUInt32BE(9);
+	console.log("  dataLength: ",dataLength);
 	let lastMark=buf.readUInt8(13);
 	console.log("  lastMark: 0x%s",lastMark.toString(16));
 	assert(firstMark==0xbe&&lastMark==0xed,"Magic number is not correct!");
-	return [indexLength,bodyLength];
+	return [infoListLength,dataLength];
 }
 function genList(buf){
 	console.log("\nFile list info:");
@@ -124,9 +124,9 @@ function doFile(name,cb,order){
 	console.log("Unpack file "+name+"...");
 	let dir=path.resolve(name,"..",path.basename(name,".wxapkg"));
 	wu.get(name,buf=>{
-		let [indexLength,bodyLength]=header(buf.slice(0,14));
+		let [infoListLength,dataLength]=header(buf.slice(0,14));
 		wu.addIO(packDone,dir,cb,order);
-		saveFile(dir,buf,genList(buf.slice(14,indexLength+14)));
+		saveFile(dir,buf,genList(buf.slice(14,infoListLength+14)));
 	},{});
 }
 module.exports={doFile:doFile};

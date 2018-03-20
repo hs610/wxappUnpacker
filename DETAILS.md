@@ -2,9 +2,42 @@
 
 ### wxapkg 包
 
-通过简单分析知，wxapkg 包由`文件名+文件内容起始地址及长度`信息放在文件头后的位置，且各个文件明文存放在包内，从而我们可以获取包内文件。
+对于 wxapkg 包文件格式的分析已在网上广泛流传，可整理为如下内容(请注意该文件中的`uint32`都是以`大端序`方式存放):
 
-这个包中的文件内容主要如下：
+```c++
+typedef unsigned char uint8;
+typedef unsigned int uint32;//Notice: uint32 use BIG-ENDIAN, not Little.
+
+struct wxHeader {
+	uint8 firstMark;// one of magic number, which is equal to 0xbe
+	uint32 unknownInfo;// this info was always set to zero. maybe it's the verison of file?
+	uint32 infoListLength;// the length of wxFileInfoList
+	uint32 dataLength;// the length of dataBuf
+	uint8 lastMark;// another magic number, which is equal to 0xed
+};
+
+struct wxFileInfo {// illustrate one file in wxapkg pack 
+	uint32 nameLen;// the length of filename
+	char name[nameLen];// filename, use UTF-8 encoding (translating it to GBK is required in Win)
+	uint32 fileOff;// the offset of this file (0 is pointing to the begining of this file[struct wxapkgFile])
+	uint32 fileLen;// the length of this file
+};
+
+struct wxFileInfoList {
+	uint32 fileCount;// The count of file
+	wxFileInfo fileInfos[fileCount];
+};
+
+struct wxapkgFile {
+	wxHeader header;
+	wxFileInfoList fileInfoList;
+	uint8 dataBuf[dataLength];
+};
+```
+
+由上可知，在wxapkg 包中文件头后的位置上有`文件名+文件内容起始地址及长度`信息，且各个文件内容也全是以明文方式存放在包内，从而我们可以获取包内文件。
+
+通过解包可知，这个包中的文件内容主要如下：
 
 - app-config.json
 - app-service.js
