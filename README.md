@@ -14,7 +14,7 @@ Wechat App(微信小程序, .wxapkg)解包及相关文件(.wxss, .json, .wxs, .w
 
 Android 手机最近使用过的微信小程序所对应的 wxapkg 包文件都存储在特定文件夹下，可通过以下命令查看：
 
-	adb pull /data/data/com.tencent.mm/MicroMsg/{User}/appbrand/pkg
+    adb pull /data/data/com.tencent.mm/MicroMsg/{User}/appbrand/pkg
 
 其中`{User}` 为当前用户的用户名，类似于 `2bc**************b65`。
 
@@ -22,13 +22,14 @@ Android 手机最近使用过的微信小程序所对应的 wxapkg 包文件都�
 
 - 实现中很多功能基于特定的版本(wcc-v0.6vv_20180111_fbi)和字符串搜索，所以不能很好的适应各种特殊情况。
 - wxml 文件拥有不同于 xml 和 html 文件的字符转义规则，且尚未公开（并非"没有"），因此未能很好的还原相关内容。
-- js 文件被压缩后会丢失原始变量名等信息内容无法还原。
+- js 文件被压缩后会丢失原始变量名等信息内容无法还原；wxss 文件压缩后的注释也会丢失。
 - wxs 文件会将所有的变量如 Math 改为 nv_Math ，这里仅通过字符串替换去除。
+- 一些被引用 wxss 文件本身的源文件丢失，因此无法恢复原始目录。
 
 ## 依赖
 
 这些 node.js 程序除了自带的 API 外还依赖于以下包:
-[cssbeautify](https://github.com/senchalabs/cssbeautify)、[CSSTree](https://github.com/codenothing/CSSTree)、[VM2](https://github.com/patriksimek/vm2)、[Esprima](https://github.com/jquery/esprima)、[UglifyES](https://github.com/mishoo/UglifyJS2/tree/harmony)
+[cssbeautify](https://github.com/senchalabs/cssbeautify)、[CSSTree](https://github.com/csstree/csstree)、[VM2](https://github.com/patriksimek/vm2)、[Esprima](https://github.com/jquery/esprima)、[UglifyES](https://github.com/mishoo/UglifyJS2/tree/harmony)
 
 您需要安装这些包才能正确执行这些程序，为了做到这一点，您可以执行以下命令:
 

@@ -113,7 +113,7 @@ var setCssToHead = function(file, _xcInvalid) {
 
 同时，它还将所有被`@import`引用的 wxss 文件所对应的数组内嵌在该函数中的 _C 变量中。
 
-我们可以修改`setCssToHead`，然后执行所有的`setCssToHead`，第一遍先判断出 _C 变量中所有的内容是哪个要被引用的 wxss 提供的，第二遍还原所有的 wxss。值得注意的是，可能出于兼容性原因，微信为很多属性自动补上含有`-webkit-`开头的版本，另外几乎所有的 tag 都加上了`wx-`前缀，并将`page`变成了`body`。通过一些 CSS 的 AST ，例如 [CSSTree](https://github.com/codenothing/CSSTree)，我们可以去掉这些东西。
+我们可以修改`setCssToHead`，然后执行所有的`setCssToHead`，第一遍先判断出 _C 变量中所有的内容是哪个要被引用的 wxss 提供的，第二遍还原所有的 wxss。值得注意的是，可能出于兼容性原因，微信为很多属性自动补上含有`-webkit-`开头的版本，另外几乎所有的 tag 都加上了`wx-`前缀，并将`page`变成了`body`。通过一些 CSS 的 AST ，例如 [CSSTree](https://github.com/csstree/csstree)，我们可以去掉这些东西。
 
 ### json
 

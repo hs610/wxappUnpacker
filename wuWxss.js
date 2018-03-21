@@ -3,25 +3,40 @@ const path=require("path");
 const {VM}=require('vm2');
 const cssbeautify=require('cssbeautify');
 const csstree=require('css-tree');
-let pureData={},result={},actualPure={},onlyTest=true,blockCss=[];//block css file which won't be imported by others.
+let pureData={},result={},actualPure={},importCnt={},frameName="",onlyTest=true,blockCss=[];//custom block css file which won't be imported by others.(no extension name)
 function cssRebuild(data){//need to bind this as {cssFile:__name__} before call
 	let cssFile=this.cssFile;
+	function statistic(data){
+		function addStat(id){
+			if(!importCnt[id])importCnt[id]=1,statistic(pureData[id]);
+			else ++importCnt[id];
+		}
+		if(typeof data==="number")return addStat(data);
+		for(let content of data)if(typeof content==="object"&&content[0]==2)addStat(content[1]);
+	}
     function makeup(data){
         var isPure=typeof data==="number";
 		if(onlyTest){
+			statistic(data);
 			if(!isPure){
 				if(data.length==1&&data[0][0]==2)data=data[0][1];
 				else return "";
 			}
-			if(!actualPure[data]&&!blockCss.includes(path.basename(cssFile,'.html'))){
+			if(!actualPure[data]&&!blockCss.includes(wu.changeExt(wu.toDir(cssFile,frameName),""))){
 				console.log("Regard "+cssFile+" as pure import file.");
 				actualPure[data]=cssFile;
 			}
 			return "";
 		}
-        if(isPure&&actualPure[data]!=cssFile)return '@import "'+wu.changeExt(wu.toDir(actualPure[data],cssFile),".wxss")+'";\n';
+		let res=[],attach="";
+        if(isPure&&actualPure[data]!=cssFile){
+			if(actualPure[data])return '@import "'+wu.changeExt(wu.toDir(actualPure[data],cssFile),".wxss")+'";\n';
+			else{
+				res.push("/*! Import by _C["+data+"], whose real path we cannot found. */");
+				attach="/*! Import end */";
+			}
+		}
         let exactData=isPure?pureData[data]:data;
-        let res=[];
 		for(let content of exactData)
 			if(typeof content==="object"){
 				switch(content[0]){
@@ -35,7 +50,7 @@ function cssRebuild(data){//need to bind this as {cssFile:__name__} before call
 					break;
 				}
 			}else res.push(content);
-        return res.join("");
+        return res.join("")+attach;
     }
     return ()=>{
 		if(!result[cssFile])result[cssFile]="";
@@ -63,6 +78,10 @@ function runOnce(){
 function transformCss(style){
 	let ast=csstree.parse(style);
 	csstree.walk(ast,function(node){
+		if(node.type=="Comment"){//Change the comment because the limit of css-tree
+			node.type="Raw";
+			node.value="\n/*"+node.value+"*/\n";
+		}
 		if(node.type=="TypeSelector"){
 			if(node.name.startsWith("wx-"))node.name=node.name.slice(3);
 			else if(node.name=="body")node.name="page";
@@ -96,15 +115,22 @@ function doWxss(dir,cb){
 			let mainCode=oriCode.slice(oriCode.indexOf("setCssToHead"),oriCode.lastIndexOf(";var __pageFrameEndTime__"));
 			console.log("Guess wxss(first turn)...");
 			preRun(dir,frameFile,mainCode,files,()=>{
+				frameName=frameFile;
 				onlyTest=true;
 				runOnce();
 				onlyTest=false;
+				console.log("Import count info: %j",importCnt);
 				for(let id in pureData)if(!actualPure[id]){
-					let newFile=path.resolve(dir,"__wuBaseWxss__/"+id+".wxss");
-					console.log("Cannot find pure import for _C["+id+"], force to save it in ("+newFile+").");
-					id=Number.parseInt(id);
-					actualPure[id]=newFile;
-					cssRebuild.call({cssFile:newFile},id)();
+					if(!importCnt[id])importCnt[id]=0;
+					if(importCnt[id]<=1){
+						console.log("Cannot find pure import for _C["+id+"] which is only imported "+importCnt[id]+" times. Let importing become copying.");
+					}else{
+						let newFile=path.resolve(dir,"__wuBaseWxss__/"+id+".wxss");
+						console.log("Cannot find pure import for _C["+id+"], force to save it in ("+newFile+").");
+						id=Number.parseInt(id);
+						actualPure[id]=newFile;
+						cssRebuild.call({cssFile:newFile},id)();
+					}
 				}
 				console.log("Guess wxss(first turn) done.\nGenerate wxss(second turn)...");
 				runOnce()
