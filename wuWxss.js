@@ -3,9 +3,9 @@ const path=require("path");
 const {VM}=require('vm2');
 const cssbeautify=require('cssbeautify');
 const csstree=require('css-tree');
-let pureData={},result={},actualPure={},importCnt={},frameName="",onlyTest=true,blockCss=[];//custom block css file which won't be imported by others.(no extension name)
+let runList={},pureData={},result={},actualPure={},importCnt={},frameName="",onlyTest=true,blockCss=[];//custom block css file which won't be imported by others.(no extension name)
 function cssRebuild(data){//need to bind this as {cssFile:__name__} before call
-	let cssFile=this.cssFile;
+	let cssFile;
 	function statistic(data){
 		function addStat(id){
 			if(!importCnt[id])importCnt[id]=1,statistic(pureData[id]);
@@ -53,15 +53,20 @@ function cssRebuild(data){//need to bind this as {cssFile:__name__} before call
         return res.join("")+attach;
     }
     return ()=>{
+		cssFile=this.cssFile;
 		if(!result[cssFile])result[cssFile]="";
 		result[cssFile]+=makeup(data);
     };
 }
 function runVM(name,code){
-	let vm=new VM({sandbox:{setCssToHead:cssRebuild.bind({cssFile:name})}});
+	let wxAppCode={},handle={cssFile:name};
+	let vm=new VM({sandbox:{$gwx(){},__wxAppCode__:wxAppCode,setCssToHead:cssRebuild.bind(handle)}});
 	vm.run(code);
+	for(let name in wxAppCode)if(name.endsWith(".wxss")){
+		handle.cssFile=path.resolve(frameName,"..",name);
+		wxAppCode[name]();
+	}
 }
-let runList={};
 function preRun(dir,frameFile,mainCode,files,cb){
 	wu.addIO(cb);
 	runList[path.resolve(dir,"./app.wxss")]=mainCode;
@@ -90,8 +95,10 @@ function transformCss(style){
 			let list={};
 			node.children.each((son,item)=>{
 				if(son.type=="Declaration"){
-					if(list["-webkit-"+son.property])node.children.remove(list["-webkit-"+son.property]);
-					else if(list[son.property]){
+					if(list["-webkit-"+son.property]){
+						node.children.remove(list["-webkit-"+son.property]);
+						delete list["-webkit-"+son.property];
+					}else if(list[son.property]){
 						let thisValue=son.value.children.head&&son.value.children.head.data.name;
 						if(list[son.property].data.value.children.head&&list[son.property].data.value.children.head.data.name=="-webkit-"+thisValue)node.children.remove(list[son.property]);
 					}
@@ -103,6 +110,7 @@ function transformCss(style){
 	return cssbeautify(csstree.generate(ast),{indent:'    ',autosemicolon:true});
 }
 function doWxss(dir,cb){
+	runList={},pureData={},result={},actualPure={},importCnt={},frameName="";
 	wu.scanDirByExt(dir,".html",files=>{
 		let frameFile=path.resolve(dir,"./page-frame.html");
 		wu.get(frameFile,code=>{

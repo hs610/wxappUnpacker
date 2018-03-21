@@ -59,7 +59,7 @@ const newGameProj=`{
 	"libVersion": "game",
 	"appid": "touristappid",
 	"projectname": "unpackWeGame",
-	"isGametourist": true,
+	"isGameTourist": true,
 	"condition": {
 		"search": {
 			"current": -1,

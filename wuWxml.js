@@ -274,6 +274,7 @@ function doWxs(code){
 	return jsBeautify(code.slice(code.indexOf(before)+before.length,code.lastIndexOf('return nv_module.nv_exports;}')).replace(/nv\_/g,''));
 }
 function doFrame(name,cb){
+	wxsList={};
 	getZ(name,z=>{
 		wu.get(name,code=>{
 			const before="\nvar nv_require=function(){var nnm=";
