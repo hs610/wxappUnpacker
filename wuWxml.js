@@ -92,9 +92,9 @@ function analyze(core,z,namePool,xPool,fakePool={}){
 								let name=null,base=0;
 								for(let x of dec.init.arguments[1].elements){
 									let v=x.value;
-									if(!v){
+									if(!v&&typeof v!="number"){
 										if(x.type=="UnaryExpression"&&x.operator=="-")v=-x.argument.value;
-										else throw Error("Unknown type of object in _m attrs array: ",x.type);
+										else throw Error("Unknown type of object in _m attrs array: "+x.type);
 									}
 									if(name===null){
 										name=v;
