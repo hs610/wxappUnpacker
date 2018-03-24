@@ -46,39 +46,6 @@ function saveFile(dir,buf,list){
 	for(let info of list)
 		wu.save(path.resolve(dir,(info.name.startsWith("/")?".":"")+info.name),buf.slice(info.off,info.off+info.size));
 }
-const newGameProj=`{
-	"description": "unpackWeGame",
-	"setting": {
-		"urlCheck": false,
-		"es6": false,
-		"postcss": true,
-		"minified": false,
-		"newFeature": true
-	},
-	"compileType": "game",
-	"libVersion": "game",
-	"appid": "touristappid",
-	"projectname": "unpackWeGame",
-	"isGameTourist": true,
-	"condition": {
-		"search": {
-			"current": -1,
-			"list": []
-		},
-		"conversation": {
-			"current": -1,
-			"list": []
-		},
-		"game": {
-			"currentL": -1,
-			"list": []
-		},
-		"miniprogram": {
-			"current": -1,
-			"list": []
-		}
-	}
-}`;
 function packDone(dir,cb,order){
 	console.log("Unpack done.");
 	//This will be the only func running this time, so async is needless.
@@ -113,13 +80,16 @@ function packDone(dir,cb,order){
 			needDelete[path.resolve(dir,"page-frame.js")]=8;
 		} else throw Error("page-frame-like file is not found in the package by auto.");
 		wuSs.doWxss(dir,doBack);//Force it run at last, becuase lots of error occured in this part
-	}else if(fs.existsSync(path.resolve(dir,"./game.js"))){//wegame
-		console.log("Patch game.json and project.config.json file for running and split game.js...");
-		wu.save(path.resolve(dir,"./game.json"),JSON.stringify({"deviceOrientation":"portrait"}));
-		wu.save(path.resolve(dir,"./project.config.json"),newGameProj);
-		wuJs.splitJs(path.resolve(dir,"./game.js"),()=>{
+	}else if(fs.existsSync(path.resolve(dir,"game.js"))){//wegame
+		console.log("Split game.js and rewrite game.json...");
+		let gameCfg=path.resolve(dir,"app-config.json");
+		wu.get(gameCfg,cfg=>{
+			wu.save(path.resolve(dir,"game.json"),JSON.stringify(JSON.parse(cfg),null,4));
+			wu.del(gameCfg);
+		});
+		wuJs.splitJs(path.resolve(dir,"game.js"),()=>{
 			wu.addIO(()=>{
-				console.log("Patch and split done.");
+				console.log("Split and rewrite done.");
 				cb();
 			});
 		});
