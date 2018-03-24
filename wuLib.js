@@ -21,6 +21,10 @@ class CntEvent{
 	add(cb,...attach){
 		this.emptyEvent.push([cb,attach]);
 	}
+	check(cb,...attach){
+		if(this.cnt==0)cb(...attach);
+		else this.add(cb,...attach);
+	}
 }
 let ioEvent=new CntEvent;
 function mkdirs(dir,cb){
@@ -88,15 +92,28 @@ function toDir(to,from){//get relative path without posix/win32 problem
 	return ret+to.slice(len);
 }
 function commandExecute(cb,helper){
+	console.time("Total use");
+	function endTime(){
+		ioEvent.check(()=>console.timeEnd("Total use"));
+	}
 	let orders=[];
 	for(let order of process.argv)if(order.startsWith("-"))orders.push(order.slice(1));
-	let iter=process.argv[Symbol.iterator](),nxt=iter.next(),called;
+	let iter=process.argv[Symbol.iterator](),nxt=iter.next(),called=false,faster=orders.includes("f"),fastCnt;
+	if(faster){
+		fastCnt=new CntEvent;
+		fastCnt.add(endTime);
+	}
 	function doNext(){
-		nxt=iter.next();
+		let nxt=iter.next();
 		while(!nxt.done&&nxt.value.startsWith("-"))nxt=iter.next();
 		if(nxt.done){
 			if(!called)console.log("Command Line Helper:\n\n"+helper);
-		}else called=true,cb(nxt.value,doNext,orders);
+			else if(!faster)endTime();
+		}else{
+			called=true;
+			if(faster)fastCnt.encount(),cb(nxt.value,fastCnt.decount,orders),doNext();
+			else cb(nxt.value,doNext,orders);
+		}
 	}
 	while(!nxt.done&&!nxt.value.endsWith(".js"))nxt=iter.next();
 	doNext();

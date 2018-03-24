@@ -235,11 +235,7 @@ function elemToString(elem,dep){
 	rets.push(indent.repeat(dep)+"</"+elem.tag+">\n");
 	return trimMerge(rets);
 }
-function mkdirs(dirname,callback){
-    fs.exists(dirname,exists=>exists?callback():mkdirs(path.dirname(dirname),()=>fs.mkdir(dirname, callback)));
-}
-let wxsList={};
-function doWxml(dir,name,code,z,xPool,rDs){
+function doWxml(dir,name,code,z,xPool,rDs,wxsList){
 	let rname=code.slice(code.lastIndexOf("return")+6).replace(/[\;\}]/g,"").trim();
 	code=code.slice(code.indexOf("\n"),code.lastIndexOf("return")).trim();
 	let r={son:[]};
@@ -259,10 +255,10 @@ function doWxml(dir,name,code,z,xPool,rDs){
 	if(wxsList[name])result.push(wxsList[name]);
 	wu.save(name,result.join(""));
 }
-function tryWxml(dir,name,code,z,xPool,rDs){
+function tryWxml(dir,name,code,z,xPool,rDs,wxsList){
 	console.log("Decompile "+name+"...");
 	try{
-		doWxml(dir,name,code,z,xPool,rDs);
+		doWxml(dir,name,code,z,xPool,rDs,wxsList);
 		console.log("Decompile success!");
 	}catch(e){
 		console.log("error on "+name+"\nerr: ",e);
@@ -305,7 +301,7 @@ function doFrame(name,cb){
 					wxsList[name]=res.join("\n");
 				}
 			}
-			for(let name in rE)tryWxml(dir,name,rE[name].f.toString(),z,x,rD[name]);
+			for(let name in rE)tryWxml(dir,name,rE[name].f.toString(),z,x,rD[name],wxsList);
 			cb({[name]:4});
 		});
 	});

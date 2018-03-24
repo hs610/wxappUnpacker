@@ -5,7 +5,6 @@ const wuMl=require("./wuWxml.js");
 const wuSs=require("./wuWxss.js");
 const path=require("path");
 const fs=require("fs");
-const assert=require("assert");
 function header(buf){
 	console.log("\nHeader info:");
 	let firstMark=buf.readUInt8(0);
@@ -18,7 +17,7 @@ function header(buf){
 	console.log("  dataLength: ",dataLength);
 	let lastMark=buf.readUInt8(13);
 	console.log("  lastMark: 0x%s",lastMark.toString(16));
-	assert(firstMark==0xbe&&lastMark==0xed,"Magic number is not correct!");
+	if(firstMark!=0xbe||lastMark!=0xed)throw Error("Magic number is not correct!");
 	return [infoListLength,dataLength];
 }
 function genList(buf){
@@ -58,7 +57,7 @@ function packDone(dir,cb,order){
 				console.log("Split and make up done.");
 				if(!order.includes("d")){
 					console.log("Delete files...");
-					wu.addIO(()=>console.log("Deleted.\n\nTotally done."));
+					wu.addIO(()=>console.log("Deleted.\n\nFile done."));
 					for(let name in needDelete)if(needDelete[name]>=8)wu.del(name);
 				}
 				cb();
