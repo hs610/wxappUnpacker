@@ -1,5 +1,6 @@
 const wu=require("./wuLib.js");
 const path=require("path");
+const fs=require("fs");
 const {VM}=require('vm2');
 const cssbeautify=require('cssbeautify');
 const csstree=require('css-tree');
@@ -112,7 +113,12 @@ function transformCss(style){
 function doWxss(dir,cb){
 	runList={},pureData={},result={},actualPure={},importCnt={},frameName="";
 	wu.scanDirByExt(dir,".html",files=>{
-		let frameFile=path.resolve(dir,"./page-frame.html");
+		let frameFile="";
+		if(fs.existsSync(path.resolve(dir,"page-frame.html")))
+			frameFile=path.resolve(dir,"page-frame.html");
+		else if(fs.existsSync(path.resolve(dir,"app-wxss.js")))
+			frameFile=path.resolve(dir,"app-wxss.js");
+		else throw Error("page-frame-like file is not found in the package by auto.");
 		wu.get(frameFile,code=>{
 			code=code.slice(code.indexOf('var setCssToHead = function(file, _xcInvalid) {'));
 			code=code.slice(code.indexOf('\nvar _C= ')+1);
@@ -145,7 +151,8 @@ function doWxss(dir,cb){
 				console.log("Generate wxss(second turn) done.\nSave wxss...");
 				for(let name in result)wu.save(wu.changeExt(name,".wxss"),transformCss(result[name]));
 				let delFiles={};
-				for(let name of files)delFiles[name]=name==frameFile?4:8;
+				for(let name of files)delFiles[name]=8;
+				delFiles[frameFile]=4;
 				cb(delFiles);
 			});
 		});
@@ -153,5 +160,5 @@ function doWxss(dir,cb){
 }
 module.exports={doWxss:doWxss};
 if(require.main===module){
-    wu.commandExecute(doWxss,"Restore wxss files.\n\n<dirs...>\n\n<dirs...> restore wxss file from a unpacked directory(Have page-frame.html and other html file).");
+    wu.commandExecute(doWxss,"Restore wxss files.\n\n<dirs...>\n\n<dirs...> restore wxss file from a unpacked directory(Have page-frame.html (or app-wxss.js) and other html file).");
 }

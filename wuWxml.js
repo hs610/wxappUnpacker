@@ -312,5 +312,5 @@ function doFrame(name,cb){
 }
 module.exports={doFrame:doFrame};
 if(require.main===module){
-    wu.commandExecute(doFrame,"Restore wxml files.\n\n<files...>\n\n<files...> restore wxml file from page-frame.html.");
+    wu.commandExecute(doFrame,"Restore wxml files.\n\n<files...>\n\n<files...> restore wxml file from page-frame.html or app-wxss.js.");
 }

@@ -82,7 +82,7 @@ const newGameProj=`{
 function packDone(dir,cb,order){
 	console.log("Unpack done.");
 	//This will be the only func running this time, so async is needless.
-	if(fs.existsSync(path.resolve(dir,"./page-frame.html"))){//weapp
+	if(fs.existsSync(path.resolve(dir,"app-service.js"))){//weapp
 		console.log("Split app-service.js and make up configs & wxss & wxml & wxs...");
 		let weappEvent=new wu.CntEvent,needDelete={};
 		weappEvent.encount(4);
@@ -105,10 +105,15 @@ function packDone(dir,cb,order){
 			weappEvent.decount();
 		}
 		wuCfg.doConfig(path.resolve(dir,"app-config.json"),doBack);
-		wuJs.splitJs(path.resolve(dir,"./app-service.js"),doBack);
-		wuMl.doFrame(path.resolve(dir,"./page-frame.html"),doBack);
-		wuSs.doWxss(dir,doBack);
-	}else{//wegame
+		wuJs.splitJs(path.resolve(dir,"app-service.js"),doBack);
+		if(fs.existsSync(path.resolve(dir,"page-frame.html")))
+			wuMl.doFrame(path.resolve(dir,"page-frame.html"),doBack);
+		else if(fs.existsSync(path.resolve(dir,"app-wxss.js"))) {
+			wuMl.doFrame(path.resolve(dir,"app-wxss.js"),doBack);
+			needDelete[path.resolve(dir,"page-frame.js")]=8;
+		} else throw Error("page-frame-like file is not found in the package by auto.");
+		wuSs.doWxss(dir,doBack);//Force it run at last, becuase lots of error occured in this part
+	}else if(fs.existsSync(path.resolve(dir,"./game.js"))){//wegame
 		console.log("Patch game.json and project.config.json file for running and split game.js...");
 		wu.save(path.resolve(dir,"./game.json"),JSON.stringify({"deviceOrientation":"portrait"}));
 		wu.save(path.resolve(dir,"./project.config.json"),newGameProj);
@@ -118,7 +123,7 @@ function packDone(dir,cb,order){
 				cb();
 			});
 		});
-	}
+	}else throw Error("This Package is unrecognizable, please decrypted every type of file by hand.")
 }
 function doFile(name,cb,order){
 	console.log("Unpack file "+name+"...");

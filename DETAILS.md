@@ -41,7 +41,7 @@ struct wxapkgFile {
 
 - app-config.json
 - app-service.js
-- page-frame.html
+- page-frame.html ( 也可能是由 app-wxss.js 和 page-frame.js 组成相关信息 )
 - 其他一堆放在各文件夹中的.html文件
 - 和源码包内位置和内容相同的图片等资源文件
 
@@ -121,7 +121,7 @@ app-config.json 中的`page`对象内就是其他各页面所对应的 json , �
 
 ### wxs
 
-在 page-frame.html 中，我们找到了这样的内容
+在 page-frame.html ( 或 app-wxss.js ) 中，我们找到了这样的内容
 
 ```javascript
 f_['a/comm.wxs'] = nv_require("p_a/comm.wxs");
@@ -143,7 +143,7 @@ f_['b/index.wxml']['some_commsb']();
 
 ### wxml
 
-相比其他内容，这一段比较复杂，因为微信将原本 类 xml 格式的 wxml 文件直接编译成了 js 代码放入 page-frame.html 中，之后通过调用这些代码来构造 virtual-dom，进而渲染网页。
+相比其他内容，这一段比较复杂，因为微信将原本 类 xml 格式的 wxml 文件直接编译成了 js 代码放入 page-frame.html ( 或 app-wxss.js ) 中，之后通过调用这些代码来构造 virtual-dom，进而渲染网页。
 首先，微信将所有要动态计算的变量放在了一个由函数构造的`z`数组中，构造部分代码如下：
 
 ```javascript
@@ -252,7 +252,7 @@ _ai({name},x[{from}],e_,x[{to}],..,..)
 {name}.pop()
 ```
 
-对应与(其中的`x`是直接定义在 page-frame.html 中的字符串数组)：
+对应与(其中的`x`是直接定义在 page-frame.html ( 或 app-wxss.js ) 中的字符串数组)：
 
 ```xml
 <import src="x[{from}]" />
