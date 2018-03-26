@@ -213,7 +213,7 @@ function elemToString(elem,dep){
 				ok=false;
 				break;
 			}
-			if(ok){
+			if(ok&&!(("wx:for" in s.v||"wx:if" in s.v)&&("wx:if" in elem.v||"wx:else" in elem.v||"wx:elif" in elem.v))){//if for and if in one tag, the default result is an if in for. And we should block if nested in elif/else been combined.
 				Object.assign(s.v,elem.v);
 				return elemToString(s,dep);
 			}
@@ -285,7 +285,6 @@ function doFrame(name,cb){
 				return ()=>path;
 			}}});
 			vm.run(code+"\n_vmRev_([x,"+json+"])");
-			console.log(x);
 			let dir=path.dirname(name),pF=[];
 			for(let info in rF)if(typeof rF[info]=="function"){
 				let name=path.resolve(dir,(info[0]=='/'?'.':'')+info),ref=rF[info]();
