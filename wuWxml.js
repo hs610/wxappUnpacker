@@ -177,11 +177,14 @@ function wxmlify(str,isText){
 	if(isText)return str;//may have some bugs in some specific case(undocumented by tx)
 	else return str.replace(/"/g, '\\"');
 }
-function elemToString(elem,dep){
+function elemToString(elem,dep,moreInfo=false){
 	const longerList=[];//put tag name which can't be <x /> style.
 	const indent=' '.repeat(4);
 	function isTextTag(elem){
 		return elem.tag=="__textNode__"&&elem.content;
+	}
+	function elemRecursion(elem,dep){
+		return elemToString(elem,dep,moreInfo);
 	}
 	function trimMerge(rets){
 		let needTrimLeft=false,ans="";
@@ -206,7 +209,7 @@ function elemToString(elem,dep){
 		str.textNode=1;
 		return wxmlify(str,true);//indent.repeat(dep)+wxmlify(elem.content.trim(),true)+"\n";
 	}
-	if(elem.tag=="block"){
+	if(elem.tag=="block"&&!moreInfo){
 		if(elem.son.length==1&&!isTextTag(elem.son[0])){
 			let ok=true,s=elem.son[0];
 			for(let x in elem.v)if(x in s.v){
@@ -215,11 +218,11 @@ function elemToString(elem,dep){
 			}
 			if(ok&&!(("wx:for" in s.v||"wx:if" in s.v)&&("wx:if" in elem.v||"wx:else" in elem.v||"wx:elif" in elem.v))){//if for and if in one tag, the default result is an if in for. And we should block if nested in elif/else been combined.
 				Object.assign(s.v,elem.v);
-				return elemToString(s,dep);
+				return elemRecursion(s,dep);
 			}
 		}else if(Object.keys(elem.v).length==0){
 			let ret=[];
-			for(let s of elem.son)ret.push(elemToString(s,dep));
+			for(let s of elem.son)ret.push(elemRecursion(s,dep));
 			return trimMerge(ret);
 		}
 	}
@@ -231,17 +234,17 @@ function elemToString(elem,dep){
 	}
 	ret+=">\n";
 	let rets=[ret];
-	for(let s of elem.son)rets.push(elemToString(s,dep+1));
+	for(let s of elem.son)rets.push(elemRecursion(s,dep+1));
 	rets.push(indent.repeat(dep)+"</"+elem.tag+">\n");
 	return trimMerge(rets);
 }
-function doWxml(dir,name,code,z,xPool,rDs,wxsList){
+function doWxml(dir,name,code,z,xPool,rDs,wxsList,moreInfo){
 	let rname=code.slice(code.lastIndexOf("return")+6).replace(/[\;\}]/g,"").trim();
 	code=code.slice(code.indexOf("\n"),code.lastIndexOf("return")).trim();
 	let r={son:[]};
 	analyze(esprima.parseScript(code).body,z,{[rname]:r},xPool,{[rname]:r});
 	let ans=[];
-	for(let elem of r.son)ans.push(elemToString(elem,0));
+	for(let elem of r.son)ans.push(elemToString(elem,0,moreInfo));
 	let result=[ans.join("")];
 	for(let v in rDs){
 		let code=rDs[v].toString();
@@ -249,7 +252,7 @@ function doWxml(dir,name,code,z,xPool,rDs,wxsList){
 		code=code.slice(code.indexOf("\ntry{")+5,code.lastIndexOf("\n}catch(")).trim();
 		let r={tag:"template",v:{name:v},son:[]};
 		analyze(esprima.parseScript(code).body,z,{[rname]:r},xPool,{[rname]:r});
-		result.unshift(elemToString(r,0));
+		result.unshift(elemToString(r,0,moreInfo));
 	}
 	name=path.resolve(dir,name);
 	if(wxsList[name])result.push(wxsList[name]);
@@ -269,7 +272,8 @@ function doWxs(code){
 	const before='nv_module={nv_exports:{}};';
 	return jsBeautify(code.slice(code.indexOf(before)+before.length,code.lastIndexOf('return nv_module.nv_exports;}')).replace(/nv\_/g,''));
 }
-function doFrame(name,cb){
+function doFrame(name,cb,order){
+	let moreInfo=order.includes("m");
 	wxsList={};
 	getZ(name,z=>{
 		wu.get(name,code=>{
@@ -301,7 +305,7 @@ function doFrame(name,cb){
 					wxsList[name]=res.join("\n");
 				}
 			}
-			for(let name in rE)tryWxml(dir,name,rE[name].f.toString(),z,x,rD[name],wxsList);
+			for(let name in rE)tryWxml(dir,name,rE[name].f.toString(),z,x,rD[name],wxsList,moreInfo);
 			cb({[name]:4});
 		});
 	});

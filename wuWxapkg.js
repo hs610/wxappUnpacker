@@ -73,9 +73,9 @@ function packDone(dir,cb,order){
 		wuCfg.doConfig(path.resolve(dir,"app-config.json"),doBack);
 		wuJs.splitJs(path.resolve(dir,"app-service.js"),doBack);
 		if(fs.existsSync(path.resolve(dir,"page-frame.html")))
-			wuMl.doFrame(path.resolve(dir,"page-frame.html"),doBack);
+			wuMl.doFrame(path.resolve(dir,"page-frame.html"),doBack,order);
 		else if(fs.existsSync(path.resolve(dir,"app-wxss.js"))) {
-			wuMl.doFrame(path.resolve(dir,"app-wxss.js"),doBack);
+			wuMl.doFrame(path.resolve(dir,"app-wxss.js"),doBack,order);
 			needDelete[path.resolve(dir,"page-frame.js")]=8;
 		} else throw Error("page-frame-like file is not found in the package by auto.");
 		wuSs.doWxss(dir,doBack);//Force it run at last, becuase lots of error occured in this part
