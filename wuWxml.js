@@ -49,12 +49,12 @@ function analyze(core,z,namePool,xPool,fakePool={}){
 							}
 							break;
 							case "_ic":
-								pushSon(f.arguments[5].name,{tag:"include",son:[],v:{src:wu.toDir(xPool[f.arguments[0].property.value],xPool[f.arguments[2].property.value])}});
+								pushSon(f.arguments[5].name,{tag:"include",son:[],v:{src:xPool[f.arguments[0].property.value]}});
 							break;
 							case "_ai":
 							{//template import
 								let to=Object.keys(fakePool)[0];
-								if(to)pushSon(to,{tag:"import",son:[],v:{src:wu.toDir(xPool[f.arguments[1].property.value],xPool[f.arguments[3].property.value])}});
+								if(to)pushSon(to,{tag:"import",son:[],v:{src:xPool[f.arguments[1].property.value]}});
 								else throw Error("Unexpected fake pool");
 							}
 							break;
@@ -255,10 +255,10 @@ function doWxml(dir,name,code,z,xPool,rDs,wxsList){
 	if(wxsList[name])result.push(wxsList[name]);
 	wu.save(name,result.join(""));
 }
-function tryWxml(dir,name,code,z,xPool,rDs,wxsList){
+function tryWxml(dir,name,code,...args){
 	console.log("Decompile "+name+"...");
 	try{
-		doWxml(dir,name,code,z,xPool,rDs,wxsList);
+		doWxml(dir,name,code,...args);
 		console.log("Decompile success!");
 	}catch(e){
 		console.log("error on "+name+"\nerr: ",e);
@@ -285,6 +285,7 @@ function doFrame(name,cb){
 				return ()=>path;
 			}}});
 			vm.run(code+"\n_vmRev_([x,"+json+"])");
+			console.log(x);
 			let dir=path.dirname(name),pF=[];
 			for(let info in rF)if(typeof rF[info]=="function"){
 				let name=path.resolve(dir,(info[0]=='/'?'.':'')+info),ref=rF[info]();
