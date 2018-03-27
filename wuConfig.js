@@ -17,17 +17,21 @@ function doConfig(configFile,cb){
 			digestsEvent.add(()=>{
 				for(let e of app.tabBar.list){
 					e.pagePath=wu.changeExt(e.pagePath);
-					let hash=crypto.createHash("MD5").update(e.iconData,'base64').digest();
-					for(let [buf,name] of digests)if(hash.equals(buf)){
-						delete e.iconData;
-						e.iconPath=fixDir(name).replace(/\\/g,'/');
-						break;
+					if(e.iconData){
+						let hash=crypto.createHash("MD5").update(e.iconData,'base64').digest();
+						for(let [buf,name] of digests)if(hash.equals(buf)){
+							delete e.iconData;
+							e.iconPath=fixDir(name).replace(/\\/g,'/');
+							break;
+						}
 					}
-					hash=crypto.createHash("MD5").update(e.selectedIconData,'base64').digest();
-					for(let [buf,name] of digests)if(hash.equals(buf)){
-						delete e.selectedIconData;
-						e.selectedIconPath=fixDir(name).replace(/\\/g,'/');
-						break;
+					if(e.selectedIconData){
+						let hash=crypto.createHash("MD5").update(e.selectedIconData,'base64').digest();
+						for(let [buf,name] of digests)if(hash.equals(buf)){
+							delete e.selectedIconData;
+							e.selectedIconPath=fixDir(name).replace(/\\/g,'/');
+							break;
+						}
 					}
 				}
 				wu.save(path.resolve(dir,'app.json'),JSON.stringify(app,null,4));

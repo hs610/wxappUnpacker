@@ -15,7 +15,7 @@ function splitJs(name,cb){
 				wu.save(path.resolve(dir,name),jsBeautify(code.slice(code.indexOf('"use strict";')+'"use strict";'.length,code.lastIndexOf("\n"))));
 			}
 		}});
-		vm.run(code);
+		vm.run(code.slice(code.indexOf("define(")));
 		cb({[name]:8});
 	});
 }
