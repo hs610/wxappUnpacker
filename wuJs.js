@@ -16,6 +16,7 @@ function splitJs(name,cb){
 			}
 		}});
 		vm.run(code.slice(code.indexOf("define(")));
+		console.log("Splitting \""+name+"\" done.");
 		cb({[name]:8});
 	});
 }
