@@ -11,8 +11,17 @@ function splitJs(name,cb){
 		let vm=new VM({sandbox:{
 			require(){},
 			define(name,func){
-				code=func.toString();
-				wu.save(path.resolve(dir,name),jsBeautify(code.slice(code.indexOf('"use strict";')+'"use strict";'.length,code.lastIndexOf("\n"))));
+				let code=func.toString();
+				code=code.slice(code.indexOf("{")+1,code.lastIndexOf("}")-1).trim();
+				let bcode=code;
+				if(code.startsWith('"use strict";')||code.startsWith("'use strict';"))code=code.slice(13);
+				else if((code.startsWith('(function(){"use strict";')||code.startsWith("(function(){'use strict';"))&&code.endsWith("})();"))code=code.slice(25,-5);
+				let res=jsBeautify(code);
+				if(typeof res=="undefined"){
+					console.log("Fail to delete 'use strict' in \""+name+"\".");
+					res=jsBeautify(bcode);
+				}
+				wu.save(path.resolve(dir,name),jsBeautify(res));
 			}
 		}});
 		vm.run(code.slice(code.indexOf("define(")));
