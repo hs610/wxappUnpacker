@@ -58,6 +58,7 @@ function analyze(core,z,namePool,xPool,fakePool={}){
 								else throw Error("Unexpected fake pool");
 							}
 							break;
+							case "_af":console.log(z[f.arguments[2].value]);break;
 							default:throw Error("Unknown expression callee name "+f.callee.name);
 						}
 					}else if(f.callee.type=="MemberExpression"){
