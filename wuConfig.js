@@ -8,7 +8,9 @@ function doConfig(configFile,cb){
 		let k=e.pages;
 		k.splice(k.indexOf(wu.changeExt(e.entryPagePath)),1);
 		k.unshift(wu.changeExt(e.entryPagePath))
-		let app={pages:k,window:e.global.window,tabBar:e.tabBar,networkTimeout:e.networkTimeout};
+		let app={pages:k,window:e.global&&e.global.window,tabBar:e.tabBar,networkTimeout:e.networkTimeout};
+		if(e.extAppid)
+			wu.save(path.resolve(dir,'ext.json'),JSON.stringify({extEnable:true,extAppid:e.extAppid,ext:e.ext},null,4));
 		if(typeof e.debug!="undefined")app.debug=e.debug;
 		for(let a in e.page)wu.save(path.resolve(dir,wu.changeExt(a,".json")),JSON.stringify(e.page[a].window,null,4));
 		if(app.tabBar&&app.tabBar.list) wu.scanDirByExt(dir,"",li=>{//search all files
