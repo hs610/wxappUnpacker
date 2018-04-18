@@ -6,7 +6,9 @@ function catchZ(name,cb){
 			z:z,
 			debugInfo:[]
 		}});
-		code=code.slice(code.indexOf('(function(z){var a=11;function Z(ops){z.push(ops)}'),code.lastIndexOf("(z);__WXML_GLOBAL__.ops_set.$gwx=z;")+4);
+		let lastPtr=code.lastIndexOf("(z);__WXML_GLOBAL__.ops_set.$gwx=z;");
+		if(lastPtr==-1)lastPtr=code.lastIndexOf("(z);__WXML_GLOBAL__.ops_set.$gwx");
+		code=code.slice(code.indexOf('(function(z){var a=11;function Z(ops){z.push(ops)}'),lastPtr+4);
 		vm.run(code);
 		cb(z);
 	});
