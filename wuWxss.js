@@ -117,6 +117,8 @@ function doWxss(dir,cb){
 			frameFile=path.resolve(dir,"page-frame.html");
 		else if(fs.existsSync(path.resolve(dir,"app-wxss.js")))
 			frameFile=path.resolve(dir,"app-wxss.js");
+		else if(fs.existsSync(path.resolve(dir,"page-frame.js")))
+			frameFile=path.resolve(dir,"page-frame.js");
 		else throw Error("page-frame-like file is not found in the package by auto.");
 		wu.get(frameFile,code=>{
 			code=code.slice(code.indexOf('var setCssToHead = function(file, _xcInvalid) {'));
