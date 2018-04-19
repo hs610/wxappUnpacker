@@ -121,7 +121,7 @@ function doWxss(dir,cb){
 			frameFile=path.resolve(dir,"page-frame.js");
 		else throw Error("page-frame-like file is not found in the package by auto.");
 		wu.get(frameFile,code=>{
-			code=code.slice(code.indexOf('var setCssToHead = function(file, _xcInvalid) {'));
+			code=code.slice(code.indexOf('var setCssToHead = function(file, _xcInvalid'));
 			code=code.slice(code.indexOf('\nvar _C= ')+1);
 			let oriCode=code;
 			code=code.slice(0,code.indexOf('\n'));
