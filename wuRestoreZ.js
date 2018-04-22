@@ -1,17 +1,15 @@
 const wu=require("./wuLib.js");
 const {VM}=require('vm2');
-function catchZ(name,cb){
-	wu.get(name,code=>{
-		let z=[],vm=new VM({sandbox:{
-			z:z,
-			debugInfo:[]
-		}});
-		let lastPtr=code.lastIndexOf("(z);__WXML_GLOBAL__.ops_set.$gwx=z;");
-		if(lastPtr==-1)lastPtr=code.lastIndexOf("(z);__WXML_GLOBAL__.ops_set.$gwx");
-		code=code.slice(code.indexOf('(function(z){var a=11;function Z(ops){z.push(ops)}'),lastPtr+4);
-		vm.run(code);
-		cb(z);
-	});
+function catchZ(code,cb){
+	let z=[],vm=new VM({sandbox:{
+		z:z,
+		debugInfo:[]
+	}});
+	let lastPtr=code.lastIndexOf("(z);__WXML_GLOBAL__.ops_set.$gwx=z;");
+	if(lastPtr==-1)lastPtr=code.lastIndexOf("(z);__WXML_GLOBAL__.ops_set.$gwx");
+	code=code.slice(code.indexOf('(function(z){var a=11;function Z(ops){z.push(ops)}'),lastPtr+4);
+	vm.run(code);
+	cb(z);
 }
 function restoreSingle(ops,withScope=false,par=''){
 	if(typeof ops=="undefined")return "";
@@ -194,6 +192,6 @@ function restoreAll(z){
 	for(let e of z)ans.push(restoreSingle(e,false));
 	return ans;
 }
-module.exports={getZ(name,cb){
-	catchZ(name,z=>cb(restoreAll(z)));
+module.exports={getZ(code,cb){
+	catchZ(code,z=>cb(restoreAll(z)));
 }};

@@ -278,8 +278,8 @@ function doWxs(code){
 function doFrame(name,cb,order){
 	let moreInfo=order.includes("m");
 	wxsList={};
-	getZ(name,z=>{
-		wu.get(name,code=>{
+	wu.get(name,code=>{
+		getZ(code,z=>{
 			const before="\nvar nv_require=function(){var nnm=";
 			code=code.slice(code.indexOf(before)+before.length,code.lastIndexOf("if(path&&e_[path]){"));
 			json=code.slice(0,code.indexOf("};")+1);

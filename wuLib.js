@@ -26,9 +26,41 @@ class CntEvent{
 		else this.add(cb,...attach);
 	}
 }
+class LimitedRunner{
+	constructor(limit){
+		this.limit=limit;
+		this.cnt=0;
+		this.funcs=[];
+	}
+	run(func){
+		if(this.cnt<this.limit){
+			this.cnt++;
+			setTimeout(func,0);
+		}else{
+			this.funcs.push(func);
+		}
+	}
+	done(){
+		if(this.cnt>0)this.cnt--;
+		if(this.funcs.length>0){
+			this.cnt++;
+			setTimeout(this.funcs.shift(),0);
+		}
+	}
+	runWithCb(func,...args){
+		let cb=args.pop(),self=this;
+		function agent(...args){
+			self.done();
+			return cb.apply(this,args);
+		}
+		args.push(agent);
+		this.run(()=>func(...args));
+	}
+}
 let ioEvent=new CntEvent;
+let ioLimit=new LimitedRunner(4096);
 function mkdirs(dir,cb){
-	fs.stat(dir,(err,stats)=>{
+	ioLimit.runWithCb(fs.stat.bind(fs),dir,(err,stats)=>{
 		if(err)mkdirs(path.dirname(dir),()=>fs.mkdir(dir,cb));
 		else if(stats.isFile())throw Error(dir+" was created as a file, so we cannot put file into it.");
 		else cb();
@@ -36,14 +68,14 @@ function mkdirs(dir,cb){
 }
 function save(name,content){
 	ioEvent.encount();
-	mkdirs(path.dirname(name),()=>fs.writeFile(name,content,err=>{
+	mkdirs(path.dirname(name),()=>ioLimit.runWithCb(fs.writeFile.bind(fs),name,content,err=>{
 		if(err)throw Error("Save file error: "+err);
 		ioEvent.decount();
 	}));
 }
 function get(name,cb,opt={encoding:'utf8'}){
 	ioEvent.encount();
-	fs.readFile(name,opt,(err,data)=>{
+	ioLimit.runWithCb(fs.readFile.bind(fs),name,opt,(err,data)=>{
 		if(err)throw Error("Read file error: "+err);
 		else cb(data);
 		ioEvent.decount();
@@ -51,7 +83,7 @@ function get(name,cb,opt={encoding:'utf8'}){
 }
 function del(name){
 	ioEvent.encount();
-	fs.unlink(name,ioEvent.decount);
+	ioLimit.runWithCb(fs.unlink.bind(fs),name,ioEvent.decount);
 }
 function changeExt(name,ext=""){
 	return name.slice(0,name.lastIndexOf("."))+ext;
@@ -60,7 +92,7 @@ function scanDirByExt(dir,ext,cb){
 	let result=[],scanEvent=new CntEvent;
 	function helper(dir){
 		scanEvent.encount();
-		fs.readdir(dir,(err,files)=>{
+		ioLimit.runWithCb(fs.readdir.bind(fs),dir,(err,files)=>{
 			if(err)throw Error("Scan dir error: "+err);
 			for(let file of files){
 				scanEvent.encount();
