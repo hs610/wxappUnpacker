@@ -11,14 +11,14 @@ function catchZ(code,cb){
 	vm.run(code);
 	cb(z);
 }
-function restoreSingle(ops,withScope=false,par=''){
+function restoreSingle(ops,withScope=false){
 	if(typeof ops=="undefined")return "";
 	function scope(value){
 		if(value.startsWith('{')&&value.endsWith('}'))return withScope?value:"{"+value+"}";
 		return withScope?value:"{{"+value+"}}";
 	}
-	function restoreNext(ops,w=withScope,p=par){
-		return restoreSingle(ops,w,p);
+	function restoreNext(ops,w=withScope){
+		return restoreSingle(ops,w);
 	}
 	function jsoToWxon(obj){//convert JS Object to Wechat Object Notation(No quotes@key+str)
 		let ans="";
@@ -44,9 +44,9 @@ function restoreSingle(ops,withScope=false,par=''){
 			return "'"+ret.join('"')+"'";
 		}else return JSON.stringify(obj);
 	}
-	function son(value,notObject=false){
+	function son(value){
 		if(/^[A-Za-z\_][A-Za-z\d\_]*$/.test(value)/*is a qualified id*/){return '.'+value}
-		else return '['+(notObject?value:jsoToWxon(value))+']';
+		else return '['+value+']';
 	}
 	let op=ops[0];
 	if(typeof op!="object"){
@@ -131,17 +131,26 @@ function restoreSingle(ops,withScope=false,par=''){
 			break;
 		}
 		case 6://get value of an object
-			ans=restoreNext(ops[1],true)+son(restoreNext(ops[2],true),true);
+		{
+			let sonName=restoreNext(ops[2],true);
+			if(sonName._type==="var")
+				ans=restoreNext(ops[1],true)+'['+sonName+']';
+			else
+				ans=restoreNext(ops[1],true)+son(sonName);
 			break;
-		case 7://get value(may be value of one object)
+		}
+		case 7://get value of str
 		{
 			switch(ops[1][0]){
 			case 11:
-				ans=par;
+				ans="{__unTestedGetValue:["+jsoToWxon(ops)+"]}";
 				break;
 			case 3:
-				ans=par?(par+son(ops[1][1])):ops[1][1];
+				ans=new String(ops[1][1]);
+				ans._type="var";
 				break;
+			default:
+				throw "Unknown type to get value";
 			}
 			break;
 		}
