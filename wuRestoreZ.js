@@ -44,10 +44,6 @@ function restoreSingle(ops,withScope=false){
 			return "'"+ret.join('"')+"'";
 		}else return JSON.stringify(obj);
 	}
-	function son(value){
-		if(/^[A-Za-z\_][A-Za-z\d\_]*$/.test(value)/*is a qualified id*/){return '.'+value}
-		else return '['+value+']';
-	}
 	let op=ops[0];
 	if(typeof op!="object"){
 		switch(op){
@@ -135,8 +131,13 @@ function restoreSingle(ops,withScope=false){
 			let sonName=restoreNext(ops[2],true);
 			if(sonName._type==="var")
 				ans=restoreNext(ops[1],true)+'['+sonName+']';
-			else
-				ans=restoreNext(ops[1],true)+son(sonName);
+			else{
+				let attach="";
+				if(/^[A-Za-z\_][A-Za-z\d\_]*$/.test(sonName)/*is a qualified id*/)
+					attach='.'+sonName;
+				else attach='['+sonName+']';
+				ans=restoreNext(ops[1],true)+attach;
+			}
 			break;
 		}
 		case 7://get value of str
