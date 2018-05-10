@@ -82,8 +82,15 @@ function packDone(dir,cb,order){
 	}else if(fs.existsSync(path.resolve(dir,"game.js"))){//wegame
 		console.log("Split game.js and rewrite game.json...");
 		let gameCfg=path.resolve(dir,"app-config.json");
-		wu.get(gameCfg,cfg=>{
-			wu.save(path.resolve(dir,"game.json"),JSON.stringify(JSON.parse(cfg),null,4));
+		wu.get(gameCfg,cfgPlain=>{
+			let cfg=JSON.parse(cfgPlain);
+			if(cfg.subContext){
+				console.log("Found subContext, splitting it...")
+				delete cfg.subContext;
+				let contextPath=path.resolve(dir,"subContext.js");
+				wuJs.splitJs(contextPath,()=>wu.del(contextPath));
+			}
+			wu.save(path.resolve(dir,"game.json"),JSON.stringify(cfg,null,4));
 			wu.del(gameCfg);
 		});
 		wuJs.splitJs(path.resolve(dir,"game.js"),()=>{
