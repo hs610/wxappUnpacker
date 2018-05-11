@@ -94,19 +94,47 @@ function doWxss(dir,cb){
 				else if(node.name=="body")node.name="page";
 			}
 			if(node.children){
+				const removeType=["webkit","moz","ms","o"];
 				let list={};
 				node.children.each((son,item)=>{
 					if(son.type=="Declaration"){
-						if(list["-webkit-"+son.property]){
-							node.children.remove(list["-webkit-"+son.property]);
-							delete list["-webkit-"+son.property];
-						}else if(list[son.property]){
-							let thisValue=son.value.children.head&&son.value.children.head.data.name;
-							if(list[son.property].data.value.children.head&&list[son.property].data.value.children.head.data.name=="-webkit-"+thisValue)node.children.remove(list[son.property]);
-						}
-						list[son.property]=item;
+						if(list[son.property]){
+							let a=item,b=list[son.property],x=son,y=b.data,ans=null;
+							if(x.value.type=='Raw'&&x.value.value.startsWith("progid:DXImageTransform")){
+								node.children.remove(a);
+								ans=b;
+							}else if(y.value.type=='Raw'&&y.value.value.startsWith("progid:DXImageTransform")){
+								node.children.remove(b);
+								ans=a;
+							}else{
+								let xValue=x.value.children&&x.value.children.head&&x.value.children.head.data.name,yValue=y.value.children&&y.value.children.head&&y.value.children.head.data.name;
+								if(xValue&&yValue)for(let type of removeType)if(xValue==`-${type}-${yValue}`){
+									node.children.remove(a);
+									ans=b;
+									break;
+								}else if(yValue==`-${type}-${xValue}`){
+									node.children.remove(b);
+									ans=a;
+									break;
+								}else{
+									let mValue=`-${type}-`;
+									if(xValue.startsWith(mValue))xValue=xValue.slice(mValue.length);
+									if(yValue.startsWith(mValue))yValue=yValue.slice(mValue.length);
+								}
+								if(ans===null)ans=b;
+							}
+							list[son.property]=ans;
+						}else list[son.property]=item;
 					}
 				});
+				for(let name in list)if(!name.startsWith('-'))
+					for(let type of removeType){
+						let fullName=`-${type}-${name}`;
+						if(list[fullName]){
+							node.children.remove(list[fullName]);
+							delete list[fullName];
+						}
+					}
 			}
 		});
 		return cssbeautify(csstree.generate(ast),{indent:'    ',autosemicolon:true});
