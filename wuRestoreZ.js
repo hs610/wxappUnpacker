@@ -17,6 +17,19 @@ function restoreSingle(ops,withScope=false){
 		if(value.startsWith('{')&&value.endsWith('}'))return withScope?value:"{"+value+"}";
 		return withScope?value:"{{"+value+"}}";
 	}
+	function enBrace(value,type='{'){
+		if(value.startsWith('{')||value.startsWith('[')||value.startsWith('(')||value.endsWith('}')||value.endsWith(']')||value.endsWith(')'))value=' '+value+' ';
+		switch(type){
+			case '{':
+			return '{'+value+'}';
+			case '[':
+			return '['+value+']';
+			case '(':
+			return '('+value+')';
+			default:
+			throw Error("Unknown brace type "+type);
+		}
+	}
 	function restoreNext(ops,w=withScope){
 		return restoreSingle(ops,w);
 	}
@@ -30,10 +43,10 @@ function restoreSingle(ops,withScope=false){
 			return obj.toString();
 		}else if(obj instanceof Array){
 			for(let i=0;i<obj.length;i++)ans+=','+jsoToWxon(obj[i]);
-			return '['+ans.slice(1)+']';
+			return enBrace(ans.slice(1),'[');
 		}else if(typeof obj=="object"){
 			for(let k in obj)ans+=","+k+":"+jsoToWxon(obj[k]);
-			return '{'+ans.slice(1)+'}';
+			return enBrace(ans.slice(1),'{');
 		}else if(typeof obj=="string"){
 			let parts=obj.split('"'),ret=[];
 			for(let part of parts){
@@ -74,7 +87,7 @@ function restoreSingle(ops,withScope=false){
 				let ret=restoreNext(ops[i],true);
 				if(ops[i] instanceof Object&&typeof ops[i][0]=="object"&&ops[i][0][0]==2){
 					//Add brackets if we need
-					if(getPrior(op[1],ops.length)>getPrior(ops[i][0][1],ops[i].length))ret='('+ret+')';
+					if(getPrior(op[1],ops.length)>getPrior(ops[i][0][1],ops[i].length))ret=enBrace(ret,'(');;
 				}
 				return ret;
 			}
@@ -103,7 +116,7 @@ function restoreSingle(ops,withScope=false){
 		{
 			switch (ops.length) {
 			case 2:
-				ans='['+restoreNext(ops[1],true)+']';
+				ans=enBrace(restoreNext(ops[1],true),'[');
 				break;
 			case 1:
 				ans='[]';
@@ -114,13 +127,13 @@ function restoreSingle(ops,withScope=false){
 				//console.log(a,a.startsWith('[')&&a.endsWith(']'));
 				if(a.startsWith('[')&&a.endsWith(']')){
 					if(a!='[]'){
-						ans='['+a.slice(1,-1)+','+restoreNext(ops[2],true)+']';
+						ans=enBrace(a.slice(1,-1).trim()+','+restoreNext(ops[2],true),'[');
 						//console.log('-',a);
 					}else{
-						ans='['+restoreNext(ops[2],true)+']';
+						ans=enBrace(restoreNext(ops[2],true),'[');
 					}
 				}else{
-					ans='[...'+a+','+restoreNext(ops[2],true)+']';//may/must not support in fact
+					ans=enBrace('...'+a+','+restoreNext(ops[2],true),'[');//may/must not support in fact
 				}
 			}
 			}
@@ -130,12 +143,12 @@ function restoreSingle(ops,withScope=false){
 		{
 			let sonName=restoreNext(ops[2],true);
 			if(sonName._type==="var")
-				ans=restoreNext(ops[1],true)+'['+sonName+']';
+				ans=restoreNext(ops[1],true)+enBrace(sonName,'[');
 			else{
 				let attach="";
 				if(/^[A-Za-z\_][A-Za-z\d\_]*$/.test(sonName)/*is a qualified id*/)
 					attach='.'+sonName;
-				else attach='['+sonName+']';
+				else attach=enBrace(sonName,'[');
 				ans=restoreNext(ops[1],true)+attach;
 			}
 			break;
@@ -144,19 +157,19 @@ function restoreSingle(ops,withScope=false){
 		{
 			switch(ops[1][0]){
 			case 11:
-				ans="{__unTestedGetValue:["+jsoToWxon(ops)+"]}";
+				ans=enBrace("__unTestedGetValue:"+enBrace(jsoToWxon(ops),'['),'{');
 				break;
 			case 3:
 				ans=new String(ops[1][1]);
 				ans._type="var";
 				break;
 			default:
-				throw "Unknown type to get value";
+				throw Error("Unknown type to get value");
 			}
 			break;
 		}
 		case 8://first object
-			ans='{'+ops[1]+':'+restoreNext(ops[2],true)+'}';//ops[1] have only this way to define
+			ans=enBrace(ops[1]+':'+restoreNext(ops[2],true),'{');//ops[1] have only this way to define
 			break;
 		case 9://object
 		{
@@ -168,15 +181,12 @@ function restoreSingle(ops,withScope=false){
 			let a=restoreNext(ops[1],true);
 			let b=restoreNext(ops[2],true);
 			let xa=type(a),xb=type(b);
-			if(xa==2||xb==2)ans="{__unkownMerge:["+a+","+b+"]}";
+			if(xa==2||xb==2)ans=enBrace("__unkownMerge:"+enBrace(a+","+b,'['),'{');
 			else{
-				let l="",r="";
-				if(xa)l="{"+a;
-				else l=a.slice(0,-1);
-				if(xb)r=b+"}";
-				else r=b.slice(1);
+				if(!xa)a=a.slice(1,-1).trim();
+				if(!xb)b=b.slice(1,-1).trim();
 				//console.log(l,r);
-				ans=l+','+r;
+				ans=enBrace(a+','+b,'{');
 			}
 			break;
 		}
@@ -187,12 +197,12 @@ function restoreSingle(ops,withScope=false){
 		{
 			let arr=restoreNext(ops[2],true);
 			if(arr.startsWith('[')&&arr.endsWith(']'))
-				ans=restoreNext(ops[1],true)+'('+arr.slice(1,-1)+')';
-			else ans=restoreNext(ops[1],true)+'.apply(null,'+arr+')';
+				ans=restoreNext(ops[1],true)+enBrace(arr.slice(1,-1).trim(),'(');
+			else ans=restoreNext(ops[1],true)+'.apply'+enBrace('null,'+arr,'(');
 			break;
 		}
 		default:
-			ans="{__unkownSpecific:"+jsoToWxon(ops)+"}";
+			ans=enBrace("__unkownSpecific:"+jsoToWxon(ops),'{');
 		}
 		return scope(ans);
 	}
