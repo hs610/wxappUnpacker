@@ -9,29 +9,29 @@ typedef unsigned char uint8;
 typedef unsigned int uint32;//Notice: uint32 use BIG-ENDIAN, not Little.
 
 struct wxHeader {
-	uint8 firstMark;// one of magic number, which is equal to 0xbe
-	uint32 unknownInfo;// this info was always set to zero. maybe it's the verison of file?
-	uint32 infoListLength;// the length of wxFileInfoList
-	uint32 dataLength;// the length of dataBuf
-	uint8 lastMark;// another magic number, which is equal to 0xed
+    uint8 firstMark;// one of magic number, which is equal to 0xbe
+    uint32 unknownInfo;// this info was always set to zero. maybe it's the verison of file?
+    uint32 infoListLength;// the length of wxFileInfoList
+    uint32 dataLength;// the length of dataBuf
+    uint8 lastMark;// another magic number, which is equal to 0xed
 };
 
-struct wxFileInfo {// illustrate one file in wxapkg pack 
-	uint32 nameLen;// the length of filename
-	char name[nameLen];// filename, use UTF-8 encoding (translating it to GBK is required in Win)
-	uint32 fileOff;// the offset of this file (0 is pointing to the begining of this file[struct wxapkgFile])
-	uint32 fileLen;// the length of this file
+struct wxFileInfo {// illustrate one file in wxapkg pack
+    uint32 nameLen;// the length of filename
+    char name[nameLen];// filename, use UTF-8 encoding (translating it to GBK is required in Win)
+    uint32 fileOff;// the offset of this file (0 is pointing to the begining of this file[struct wxapkgFile])
+    uint32 fileLen;// the length of this file
 };
 
 struct wxFileInfoList {
-	uint32 fileCount;// The count of file
-	wxFileInfo fileInfos[fileCount];
+    uint32 fileCount;// The count of file
+    wxFileInfo fileInfos[fileCount];
 };
 
 struct wxapkgFile {
-	wxHeader header;
-	wxFileInfoList fileInfoList;
-	uint8 dataBuf[dataLength];
+    wxHeader header;
+    wxFileInfoList fileInfoList;
+    uint8 dataBuf[dataLength];
 };
 ```
 
@@ -153,7 +153,7 @@ Z([[8],'text',[[4],[[5],[[5],[[5],[1,1]],[1,2]],[1,3]]]]);
 })(z);
 ```
 
-其实可以将`[[id],xxx,yyy]`看作由指令与操作数的组合。注意每个这样的数组作为指令所产生的结果会作为外层数组中的操作数，这样可以构成一个树形结构。通过将递归计算的过程改成拼接源代码字符串的过程，我们可以还原出每个数组所对应的实际内容。下文中，将这个数组中记为`z`。
+其实可以将`[[id],xxx,yyy]`看作由指令与操作数的组合。注意每个这样的数组作为指令所产生的结果会作为外层数组中的操作数，这样可以构成一个树形结构。通过将递归计算的过程改成拼接源代码字符串的过程，我们可以还原出每个数组所对应的实际内容（值得注意的是，由于微信的`Token`解析程序采用了贪心算法，我们必须将连续的`}`翻译为`} }`而非`}}`，否则会被误认为是`Mustache`的结束符）。下文中，将这个数组中记为`z`。
 
 然后，对于 wxml 文件的结构，可以将每种可能的 js 语句拆分成 指令 来分析，这里可以用到 [Esprima](https://github.com/jquery/esprima) 这样的 js 的 AST 来简化识别操作，可以很容易分析出以下内容，例如:
 
