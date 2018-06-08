@@ -12,6 +12,14 @@ function doConfig(configFile,cb){
 		if(e.extAppid)
 			wu.save(path.resolve(dir,'ext.json'),JSON.stringify({extEnable:true,extAppid:e.extAppid,ext:e.ext},null,4));
 		if(typeof e.debug!="undefined")app.debug=e.debug;
+		let cur=path.resolve("./file");
+		for(let a in e.page)if(e.page[a].window.usingComponents)
+			for(let name in e.page[a].window.usingComponents){
+				let file=wu.toDir(path.resolve(path.dirname(a),e.page[a].window.usingComponents[name]+".html"),cur);
+				if(!e.page[file])e.page[file]={};
+				if(!e.page[file].window)e.page[file].window={};
+				e.page[file].window.component=true;
+			}
 		for(let a in e.page)wu.save(path.resolve(dir,wu.changeExt(a,".json")),JSON.stringify(e.page[a].window,null,4));
 		if(app.tabBar&&app.tabBar.list) wu.scanDirByExt(dir,"",li=>{//search all files
 			let digests=[],digestsEvent=new wu.CntEvent,rdir=path.resolve(dir);
