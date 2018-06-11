@@ -1,6 +1,6 @@
 const wu=require("./wuLib.js");
 const {getZ}=require("./wuRestoreZ.js");
-const {jsBeautify}=require("./wuJs.js");
+const {jsBeautifyWxs}=require("./wuJs.js");
 const fs=require('fs');
 const path=require("path");
 const esprima=require('esprima');
@@ -273,7 +273,7 @@ function tryWxml(dir,name,code,...args){
 }
 function doWxs(code){
 	const before='nv_module={nv_exports:{}};';
-	return jsBeautify(code.slice(code.indexOf(before)+before.length,code.lastIndexOf('return nv_module.nv_exports;}')).replace(/nv\_/g,''));
+    return jsBeautifyWxs(code.slice(code.indexOf(before)+before.length,code.lastIndexOf('return nv_module.nv_exports;}')).replace(/nv\_/g,''));
 }
 function doFrame(name,cb,order){
 	let moreInfo=order.includes("m");
