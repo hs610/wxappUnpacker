@@ -15,8 +15,8 @@ function doConfig(configFile,cb){
 		let cur=path.resolve("./file");
 		for(let a in e.page)if(e.page[a].window.usingComponents)
 			for(let name in e.page[a].window.usingComponents){
-			    let componentPath = e.page[a].window.usingComponents[name];
-				let file= (0===componentPath.indexOf('/'))?(componentPath.substring(1)+'.html'):(wu.toDir(path.resolve(path.dirname(a),componentPath+".html"),cur));
+				let componentPath=e.page[a].window.usingComponents[name]+".html";
+				let file=componentPath.startsWith('/')?componentPath.slice(1):wu.toDir(path.resolve(path.dirname(a),componentPath),cur);
 				if(!e.page[file])e.page[file]={};
 				if(!e.page[file].window)e.page[file].window={};
 				e.page[file].window.component=true;
