@@ -47,36 +47,38 @@ function saveFile(dir,buf,list){
 }
 function packDone(dir,cb,order){
 	console.log("Unpack done.");
+	let weappEvent=new wu.CntEvent,needDelete={};
+	weappEvent.encount(4);
+	weappEvent.add(()=>{
+		wu.addIO(()=>{
+			console.log("Split and make up done.");
+			if(!order.includes("d")){
+				console.log("Delete files...");
+				wu.addIO(()=>console.log("Deleted.\n\nFile done."));
+				for(let name in needDelete)if(needDelete[name]>=8)wu.del(name);
+			}
+			cb();
+		});
+	});
+	function doBack(deletable){
+		for(let key in deletable){
+			if(!needDelete[key])needDelete[key]=0;
+			needDelete[key]+=deletable[key];//all file have score bigger than 8 will be delete.
+		}
+		weappEvent.decount();
+	}
 	//This will be the only func running this time, so async is needless.
 	if(fs.existsSync(path.resolve(dir,"app-service.js"))){//weapp
 		console.log("Split app-service.js and make up configs & wxss & wxml & wxs...");
-		let weappEvent=new wu.CntEvent,needDelete={};
-		weappEvent.encount(4);
-		weappEvent.add(()=>{
-			wu.addIO(()=>{
-				console.log("Split and make up done.");
-				if(!order.includes("d")){
-					console.log("Delete files...");
-					wu.addIO(()=>console.log("Deleted.\n\nFile done."));
-					for(let name in needDelete)if(needDelete[name]>=8)wu.del(name);
-				}
-				cb();
-			});
-		});
-		function doBack(deletable){
-			for(let key in deletable){
-				if(!needDelete[key])needDelete[key]=0;
-				needDelete[key]+=deletable[key];//all file have score bigger than 8 will be delete.
-			}
-			weappEvent.decount();
-		}
 		wuCfg.doConfig(path.resolve(dir,"app-config.json"),doBack);
 		wuJs.splitJs(path.resolve(dir,"app-service.js"),doBack);
+		if(fs.existsSync(path.resolve(dir,"workers.js")))
+			wuJs.splitJs(path.resolve(dir,"workers.js"),doBack);
 		if(fs.existsSync(path.resolve(dir,"page-frame.html")))
 			wuMl.doFrame(path.resolve(dir,"page-frame.html"),doBack,order);
 		else if(fs.existsSync(path.resolve(dir,"app-wxss.js"))) {
 			wuMl.doFrame(path.resolve(dir,"app-wxss.js"),doBack,order);
-			needDelete[path.resolve(dir,"page-frame.js")]=8;
+			if(!needDelete[path.resolve(dir,"page-frame.js")])needDelete[path.resolve(dir,"page-frame.js")]=8;
 		} else throw Error("page-frame-like file is not found in the package by auto.");
 		wuSs.doWxss(dir,doBack);//Force it run at last, becuase lots of error occured in this part
 	}else if(fs.existsSync(path.resolve(dir,"game.js"))){//wegame
@@ -99,9 +101,10 @@ function packDone(dir,cb,order){
 				cb();
 			});
 		});
-	}else throw Error("This Package is unrecognizable, please decrypted every type of file by hand.")
+	}else throw Error("This package is unrecognizable.\nMay be this package is a subPackage which should be unpacked with -s=<MainDir>.\nOtherwise, please decrypted every type of file by hand.")
 }
 function doFile(name,cb,order){
+	for(let ord of order)if(ord.startsWith("-d="))global.subPack=ord.slice(3);
 	console.log("Unpack file "+name+"...");
 	let dir=path.resolve(name,"..",path.basename(name,".wxapkg"));
 	wu.get(name,buf=>{

@@ -9,6 +9,7 @@ function jsBeautify(code){
 function splitJs(name,cb){
 	let dir=path.dirname(name);
 	wu.get(name,code=>{
+		let needDelList={};
 		let vm=new VM({sandbox:{
 			require(){},
 			define(name,func){
@@ -22,12 +23,14 @@ function splitJs(name,cb){
 					console.log("Fail to delete 'use strict' in \""+name+"\".");
 					res=jsBeautify(bcode);
 				}
+				needDelList[path.resolve(dir,name)]=-8;
 				wu.save(path.resolve(dir,name),jsBeautify(res));
 			}
 		}});
 		vm.run(code.slice(code.indexOf("define(")));
 		console.log("Splitting \""+name+"\" done.");
-		cb({[name]:8});
+		if(!needDelList[name])needDelList[name]=8;
+		cb(needDelList);
 	});
 }
 module.exports={jsBeautify:jsBeautify,wxsBeautify:js_beautify,splitJs:splitJs};

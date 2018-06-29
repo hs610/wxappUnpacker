@@ -123,6 +123,16 @@ function toDir(to,from){//get relative path without posix/win32 problem
 	for(let i=0;i<k.length;i++)if(k[i]=='/')ret+='../';
 	return ret+to.slice(len);
 }
+function commonDir(pathA,pathB){
+	if(pathA[0]==".")pathA=pathA.slice(1);
+	if(pathB[0]==".")pathB=pathB.slice(1);
+	pathA=pathA.replace(/\\/g,'/');pathB=pathB.replace(/\\/g,'/');
+	let a=Math.min(pathA.length,pathB.length);
+	for(let i=1,m=Math.min(pathA.length,pathB.length);i<=m;i++)if(!pathA.startsWith(pathB.slice(0,i))){a=i-1;break;}
+	let pub=pathB.slice(0,a);
+	let len=pub.lastIndexOf("/")+1;
+	return pathA.slice(0,len);
+}
 function commandExecute(cb,helper){
 	console.time("Total use");
 	function endTime(){
@@ -150,5 +160,6 @@ function commandExecute(cb,helper){
 	while(!nxt.done&&!nxt.value.endsWith(".js"))nxt=iter.next();
 	doNext();
 }
-module.exports={mkdirs:mkdirs,get:get,save:save,toDir:toDir,del:del,commandExecute:commandExecute,
-	addIO:ioEvent.add,changeExt:changeExt,CntEvent:CntEvent,scanDirByExt:scanDirByExt};
+module.exports={mkdirs:mkdirs,get:get,save:save,toDir:toDir,del:del,addIO:ioEvent.add,
+	changeExt:changeExt,CntEvent:CntEvent,scanDirByExt:scanDirByExt,commonDir:commonDir,
+    commandExecute:commandExecute};

@@ -1,14 +1,33 @@
 const wu=require("./wuLib.js");
+const fs=require("fs");
 const path=require("path");
 const crypto=require("crypto");
+const {VM}=require('vm2');
+function getWorkerPath(name){
+	let code=fs.readFileSync(name,{encoding:'utf8'});
+	let commPath=false;
+	let vm=new VM({sandbox:{
+		require(){},
+		define(name){
+			name=path.dirname(name)+'/';
+			if(commPath===false)commPath=name;
+			commPath=wu.commonDir(commPath,name);
+		}
+	}});
+	vm.run(code.slice(code.indexOf("define(")));
+	if(commPath.length>0)commPath=commPath.slice(0,-1);
+	console.log("Worker path: \""+commPath+"\"");
+	return commPath;
+}
 function doConfig(configFile,cb){
 	let dir=path.dirname(configFile);
 	wu.get(configFile,content=>{
 		let e=JSON.parse(content);
 		let k=e.pages;
 		k.splice(k.indexOf(wu.changeExt(e.entryPagePath)),1);
-		k.unshift(wu.changeExt(e.entryPagePath))
+		k.unshift(wu.changeExt(e.entryPagePath));
 		let app={pages:k,window:e.global&&e.global.window,tabBar:e.tabBar,networkTimeout:e.networkTimeout};
+		if(fs.existsSync(path.resolve(dir,"workers.js")))app.workers=getWorkerPath(path.resolve(dir,"workers.js"));
 		if(e.extAppid)
 			wu.save(path.resolve(dir,'ext.json'),JSON.stringify({extEnable:true,extAppid:e.extAppid,ext:e.ext},null,4));
 		if(typeof e.debug!="undefined")app.debug=e.debug;
@@ -21,7 +40,12 @@ function doConfig(configFile,cb){
 				if(!e.page[file].window)e.page[file].window={};
 				e.page[file].window.component=true;
 			}
-		for(let a in e.page)wu.save(path.resolve(dir,wu.changeExt(a,".json")),JSON.stringify(e.page[a].window,null,4));
+		let delWeight=8;
+		for(let a in e.page){
+			let fileName=path.resolve(dir,wu.changeExt(a,".json"));
+			wu.save(fileName,JSON.stringify(e.page[a].window,null,4));
+			if(configFile==fileName)delWeight=0;
+		}
 		if(app.tabBar&&app.tabBar.list) wu.scanDirByExt(dir,"",li=>{//search all files
 			let digests=[],digestsEvent=new wu.CntEvent,rdir=path.resolve(dir);
 			function fixDir(dir){return dir.startsWith(rdir)?dir.slice(rdir.length+1):dir;}
@@ -46,7 +70,7 @@ function doConfig(configFile,cb){
 					}
 				}
 				wu.save(path.resolve(dir,'app.json'),JSON.stringify(app,null,4));
-				cb({[configFile]:8});
+				cb({[configFile]:delWeight});
 			});
 			for(let name of li){
 				digestsEvent.encount();
@@ -57,7 +81,7 @@ function doConfig(configFile,cb){
 			}
 		});else{
 			wu.save(path.resolve(dir,'app.json'),JSON.stringify(app,null,4));
-			cb({[configFile]:8});
+			cb({[configFile]:delWeight});
 		}
 	});
 }
