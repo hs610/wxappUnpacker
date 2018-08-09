@@ -104,16 +104,17 @@ function packDone(dir,cb,order){
 	}else throw Error("This package is unrecognizable.\nMay be this package is a subPackage which should be unpacked with -s=<MainDir>.\nOtherwise, please decrypted every type of file by hand.")
 }
 function doFile(name,cb,order){
-	for(let ord of order)if(ord.startsWith("-d="))global.subPack=ord.slice(3);
+	for(let ord of order)if(ord.startsWith("s="))global.subPack=ord.slice(3);
 	console.log("Unpack file "+name+"...");
 	let dir=path.resolve(name,"..",path.basename(name,".wxapkg"));
 	wu.get(name,buf=>{
 		let [infoListLength,dataLength]=header(buf.slice(0,14));
-		wu.addIO(packDone,dir,cb,order);
+		if(order.includes("o"))wu.addIO(console.log.bind(console),"Unpack done.");
+		else wu.addIO(packDone,dir,cb,order);
 		saveFile(dir,buf,genList(buf.slice(14,infoListLength+14)));
 	},{});
 }
 module.exports={doFile:doFile};
 if(require.main===module){
-    wu.commandExecute(doFile,"Unpack a wxapkg file.\n\n[-d] <files...>\n\n-d Do not delete transformed unpacked files.\n<files...> wxapkg files to unpack");
+    wu.commandExecute(doFile,"Unpack a wxapkg file.\n\n[-o] [-d] [-s=<Main Dir>] <files...>\n\n-d Do not delete transformed unpacked files.\n-o Do not execute any operation after unpack.\n-s=<Main Dir> Regard all packages provided as subPackages and\n              regard <Main Dir> as the directory of sources of the main package.\n<files...> wxapkg files to unpack");
 }

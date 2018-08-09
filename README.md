@@ -1,16 +1,16 @@
 # wxappUnpacker
 
-![版本 0.2.3](https://img.shields.io/badge/版本-0.2.3-red.svg) ![支持的微信版本 >20180111](https://img.shields.io/badge/%E5%BE%AE%E4%BF%A1%E7%89%88%E6%9C%AC-%3E20180111-brightgreen.svg) ![高级特性支持度 0](https://img.shields.io/badge/%E6%94%AF%E6%8C%81-0%25-yellow.svg)
+![版本 0.2.3](https://img.shields.io/badge/版本-0.2.3-red.svg) ![支持的微信版本 >20180111](https://img.shields.io/badge/%E5%BE%AE%E4%BF%A1%E7%89%88%E6%9C%AC-%3E=20180111%20%3C20180626-brightgreen.svg) ![高级特性支持度 0](https://img.shields.io/badge/%E6%94%AF%E6%8C%81-0%25-yellow.svg)
 
 > Wechat App(微信小程序, .wxapkg)解包及相关文件(.wxss, .json, .wxs, .wxml)还原工具
 
-## 当前功能如下
+## 当前功能如下（分包功能尚未完成！）
 
 - `node wuConfig.js <files...>` 将 app-config.json 中的内容拆分到各个文件对应的 .json 和 app.json , 并通过搜索 app-config.json 所在文件夹下的所有文件尝试将 iconData 还原为 iconPath 。
 - `node wuJs.js <files...>` 将 app-service.js (或小游戏中的 game.js ) 拆分成一系列原先独立的 javascript 文件，并使用 Uglify-ES 美化，从而尽可能还原编译前的情况。
 - `node wuWxml.js [-m] <files...>` 将编译/混合到 page-frame.html ( 或 app-wxss.js ) 中的 wxml 和 wxs 文件还原为独立的、未编译的文件。如果加上`-m`指令，就会阻止`block`块自动省略，可能帮助解决一些相关过程的 bug 。
 - `node wuWxss.js <dirs...>` 通过获取文件夹下的 page-frame.html ( 或 app-wxss.js ) 和其他 html 文件的内容，还原出编译前 wxss 文件的内容。
-- `node wuWxapkg.js [-d] [-s=<Main Dir>] <files...>` 将 wxapkg 文件解包，并将包中上述命令中所提的被编译/混合的文件自动地恢复原状。如果加上`-d`指令，就会保留编译/混合后所生成的新文件，否则会自动删去这些文件。同时，前面命令中的指令也可直接加在这一命令上。而如果需要解压分包，请先解压主包，然后执行`node wuWxapkg.js [-d] -s=<Main Dir> <subPackages...>`，其中`Main Dir`为主包解压地址。
+- `node wuWxapkg.js [-o] [-d] [-s=<Main Dir>] <files...>` 将 wxapkg 文件解包，并将包中上述命令中所提的被编译/混合的文件自动地恢复原状。如果加上`-o`指令，表示仅解包，不做后续操作。如果加上`-d`指令，就会保留编译/混合后所生成的新文件，否则会自动删去这些文件。同时，前面命令中的指令也可直接加在这一命令上。而如果需要解压分包，请先解压主包，然后执行`node wuWxapkg.js [-d] -s=<Main Dir> <subPackages...>`，其中`Main Dir`为主包解压地址。除`-d`与`-s`外，这些指令两两共存的后果是未定义的（当然，是不会有危险的）。
 
 ### wxapkg 包的获取
 
@@ -24,6 +24,8 @@ Android 手机最近使用过的微信小程序所对应的 wxapkg 包文件都�
 
 所有命令上都可以使用`-f`指令来提高一定的并行度，但输出信息会混乱。
 
+如果发现包内文件“缺失”，请先检查解包时是否出现提示`NOTICE: SubPackages exist in this package.`。如存在，请在寻找好分包后，按上文提示操作。（小程序需要访问特定页面；小游戏需要触发特定函数，然后分包才会被下载。）
+
 ### 局限（包括但可能不限于以下内容）
 
 - 实现中很多功能基于特定的版本(`wcc-v0.6vv_20180111_fbi`, 且不考虑面向低版本适配)和字符串搜索，所以不能很好的适应各种特殊情况。
@@ -34,6 +36,7 @@ Android 手机最近使用过的微信小程序所对应的 wxapkg 包文件都�
 - 有些项目开启了难以复原的`es6转es5`选项，检验本项目结果是否正确时需要关闭项目中的`es6转es5`选项。
 - wxml 中一些无法找到相对应 的正向语句的内容无法还原。
 - json 中`components`项丢失，仅会标注被其他包引用的自定义组件。
+- 已知新版本`wcc-v0.5vv_20180626_syb_zp`后对wxml有调整，暂时无法解析。
 
 ## 依赖
 

@@ -27,6 +27,10 @@ function doConfig(configFile,cb){
 		k.splice(k.indexOf(wu.changeExt(e.entryPagePath)),1);
 		k.unshift(wu.changeExt(e.entryPagePath));
 		let app={pages:k,window:e.global&&e.global.window,tabBar:e.tabBar,networkTimeout:e.networkTimeout};
+		if(e.subPackages){
+			app.subPackages=e.subPackages;
+			console.log("=======================================================\nNOTICE: SubPackages exist in this package.\nDetails: ",app.subPackages,"\n=======================================================");
+		}
 		if(fs.existsSync(path.resolve(dir,"workers.js")))app.workers=getWorkerPath(path.resolve(dir,"workers.js"));
 		if(e.extAppid)
 			wu.save(path.resolve(dir,'ext.json'),JSON.stringify({extEnable:true,extAppid:e.extAppid,ext:e.ext},null,4));
