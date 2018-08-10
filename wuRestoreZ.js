@@ -7,15 +7,15 @@ function catchZGroup(code,groupPreStr,cb){
 		let content=code.slice(code.indexOf(preStr)),z=[];
 		content=content.slice(content.indexOf("(function(z){var a=11;"));
 		content=content.slice(0,content.indexOf("})(__WXML_GLOBAL__.ops_cached.$gwx_"))+"})(z);";
-		if(content.startsWith(debugPre))content="(function(z){var a=11;function Z(ops){z.push(ops);return;"+content.slice(debugPre.length);
 		let vm=new VM({sandbox:{z:z,debugInfo:[]}});
 		vm.run(content);
-		zArr[preStr.match(/function gz\$gwx_(\d+)/)[1]]=z;
+		if(content.startsWith(debugPre))for(let i=0;i<z.length;i++)z[i]=z[i][1];
+		zArr[preStr.match(/function gz\$gwx(\d*\_\d+)/)[1]]=z;
 	}
 	cb({"mul":zArr});
 }
 function catchZ(code,cb){
-	let groupTest=code.match(/function gz\$gwx_(\d+)\(\)\{\s*if\( __WXML_GLOBAL__\.ops_cached\.\$gwx_\d+\)/g);
+	let groupTest=code.match(/function gz\$gwx(\d*\_\d+)\(\)\{\s*if\( __WXML_GLOBAL__\.ops_cached\.\$gwx_\d+\)/g);
 	if(groupTest!==null)return catchZGroup(code,groupTest,cb);
 	let z=[],vm=new VM({sandbox:{
 		z:z,

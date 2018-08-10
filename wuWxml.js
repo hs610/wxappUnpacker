@@ -186,8 +186,8 @@ function analyze(core,z,namePool,xPool,fakePool={},zMulName="0"){
 							default:
 							{
 								let funName=dec.init.callee.name;
-								if(funName.startsWith("gz$gwx_")){
-									zMulName=funName.slice(7);
+								if(funName.startsWith("gz$gwx")){
+									zMulName=funName.slice(6);
 								}else throw Error("Unknown init callee "+funName);
 							}
 						}
@@ -315,7 +315,7 @@ function doWxml(state,dir,name,code,z,xPool,rDs,wxsList,moreInfo){
 		let oriCode=rDs[v].toString();
 		let rname=oriCode.slice(oriCode.lastIndexOf("return")+6).replace(/[\;\}]/g,"").trim();
 		let tryPtr=oriCode.indexOf("\ntry{");
-		let zPtr=oriCode.indexOf("var z=gz$gwx_");
+		let zPtr=oriCode.indexOf("var z=gz$gwx");
 		let code=oriCode.slice(tryPtr+5,oriCode.lastIndexOf("\n}catch(")).trim();
 		if(zPtr!=-1&&tryPtr>zPtr){
 			let attach=oriCode.slice(zPtr);
