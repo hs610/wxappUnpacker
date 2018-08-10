@@ -7,7 +7,7 @@ const csstree=require('css-tree');
 function doWxss(dir,cb){
 	function GwxCfg(){}
 	GwxCfg.prototype={$gwx(){}};
-	for(let i=0;i<100;i++)GwxCfg.prototype["$gwx"+i]=GwxCfg.prototype.$gwx;
+	for(let i=0;i<300;i++)GwxCfg.prototype["$gwx"+i]=GwxCfg.prototype.$gwx;
 	let runList={},pureData={},result={},actualPure={},importCnt={},frameName="",onlyTest=true,blockCss=[];//custom block css file which won't be imported by others.(no extension name)
 	function cssRebuild(data){//need to bind this as {cssFile:__name__} before call
 		let cssFile;

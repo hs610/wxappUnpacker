@@ -5,9 +5,9 @@ const fs=require('fs');
 const path=require("path");
 const esprima=require('esprima');
 const {VM}=require('vm2');
-function analyze(core,z,namePool,xPool,fakePool={}){
+function analyze(core,z,namePool,xPool,fakePool={},zMulName="0"){
 	function anaRecursion(core,fakePool={}){
-		return analyze(core,z,namePool,xPool,fakePool);
+		return analyze(core,z,namePool,xPool,fakePool,zMulName);
 	}
 	function push(name,elem){
 		namePool[name]=elem;
@@ -27,6 +27,9 @@ function analyze(core,z,namePool,xPool,fakePool={}){
 							case "_r":
 								namePool[f.arguments[0].name].v[f.arguments[1].value]=z[f.arguments[2].value];
 							break;
+							case "_rz":
+								namePool[f.arguments[1].name].v[f.arguments[2].value]=z.mul[zMulName][f.arguments[3].value];
+							break;
 							case "_":
 								pushSon(f.arguments[0].name,namePool[f.arguments[1].name]);
 							break;
@@ -38,6 +41,24 @@ function analyze(core,z,namePool,xPool,fakePool={}){
 								let key=f.arguments[8].value;//def:""
 								let obj=namePool[f.arguments[5].name];
 								let gen=namePool[f.arguments[1].name];
+								if(gen.tag=="gen"){
+									let ret=gen.func.body.body.pop().argument.name;
+									anaRecursion(gen.func.body.body,{[ret]:obj});
+								}
+								obj.v["wx:for"]=data;
+								if(index!="index")obj.v["wx:for-index"]=index;
+								if(item!="item")obj.v["wx:for-item"]=item;
+								if(key!="")obj.v["wx:key"]=key;
+							}
+							break;
+							case "_2z":
+							{
+								let item=f.arguments[7].value;//def:item
+								let index=f.arguments[8].value;//def:index
+								let data=z.mul[zMulName][f.arguments[1].value];
+								let key=f.arguments[9].value;//def:""
+								let obj=namePool[f.arguments[6].name];
+								let gen=namePool[f.arguments[2].name];
 								if(gen.tag=="gen"){
 									let ret=gen.func.body.body.pop().argument.name;
 									anaRecursion(gen.func.body.body,{[ret]:obj});
@@ -85,12 +106,13 @@ function analyze(core,z,namePool,xPool,fakePool={}){
 							case "_o":
 								push(dec.id.name,{tag:"__textNode__",content:z[dec.init.arguments[0].value]});
 							break;
+							case "_oz":
+								push(dec.id.name,{tag:"__textNode__",content:z.mul[zMulName][dec.init.arguments[1].value]});
+							break;
 							case "_m":
 							{
-								if(dec.init.arguments[2].elements.length>0){
-									console.log("Noticable generics content: ",dec.init.arguments[2]);
-									throw("Here are noticable generics content");
-								}
+								if(dec.init.arguments[2].elements.length>0)
+									throw Error("Noticable generics content: "+dec.init.arguments[2].toString());
 								let mv={};
 								let name=null,base=0;
 								for(let x of dec.init.arguments[1].elements){
@@ -112,6 +134,31 @@ function analyze(core,z,namePool,xPool,fakePool={}){
 								push(dec.id.name,{tag:dec.init.arguments[0].value,son:[],v:mv});
 							}
 							break;
+							case "_mz":
+							{
+								if(dec.init.arguments[3].elements.length>0)
+									throw Error("Noticable generics content: "+dec.init.arguments[3].toString());
+								let mv={};
+								let name=null,base=0;
+								for(let x of dec.init.arguments[2].elements){
+									let v=x.value;
+									if(!v&&typeof v!="number"){
+										if(x.type=="UnaryExpression"&&x.operator=="-")v=-x.argument.value;
+										else throw Error("Unknown type of object in _mz attrs array: "+x.type);
+									}
+									if(name===null){
+										name=v;
+									}else{
+										if(base+v<0)mv[name]=null;else{
+											mv[name]=z.mul[zMulName][base+v];
+											if(base==0)base=v;
+										}
+										name=null;
+									}
+								}
+								push(dec.id.name,{tag:dec.init.arguments[1].value,son:[],v:mv});
+							}
+							break;
 							case "_gd"://template use/is
 							{
 								let is=namePool[dec.init.arguments[1].name].content;
@@ -120,7 +167,10 @@ function analyze(core,z,namePool,xPool,fakePool={}){
 								for(let e of core[ei].consequent.body){
 									if(e.type=="VariableDeclaration"){
 										for(let f of e.declarations){
-											if(f.init.type=="LogicalExpression"&&f.init.left.type=="CallExpression"&&f.init.left.callee.name=="_1")data=z[f.init.left.arguments[0].value];
+											if(f.init.type=="LogicalExpression"&&f.init.left.type=="CallExpression"){
+												if(f.init.left.callee.name=="_1")data=z[f.init.left.arguments[0].value];
+												else if(f.init.left.callee.name=="_1z")data=z.mul[zMulName][f.init.left.arguments[1].value];
+											}
 										}
 									}else if(e.type=="ExpressionStatement"){
 										let f=e.expression;
@@ -133,7 +183,13 @@ function analyze(core,z,namePool,xPool,fakePool={}){
 								Object.assign(namePool[obj].v,{is:is,data:data});
 							}
 							break;
-							default:throw Error("Unknown init callee "+dec.init.callee.name);
+							default:
+							{
+								let funName=dec.init.callee.name;
+								if(funName.startsWith("gz$gwx_")){
+									zMulName=funName.slice(7);
+								}else throw Error("Unknown init callee "+funName);
+							}
 						}
 					}else if(dec.init.type=="FunctionExpression"){
 						push(dec.id.name,{tag:"gen",func:dec.init});
@@ -149,15 +205,20 @@ function analyze(core,z,namePool,xPool,fakePool={}){
 				}
 				break;
 			case "IfStatement":
-				if(e.test.callee.name=="_o"){
+				if(e.test.callee.name.startsWith("_o")){
+					function parse_OFun(e){
+						if(e.test.callee.name=="_o")return z[e.test.arguments[0].value];
+						else if(e.test.callee.name=="_oz")return z.mul[zMulName][e.test.arguments[1].value];
+						else throw Error("Unknown if statement test callee name:"+e.test.callee.name);
+					}
 					let vname=e.consequent.body[0].expression.left.object.name;
-					let nif={tag:"block",v:{"wx:if":z[e.test.arguments[0].value]},son:[]};
+					let nif={tag:"block",v:{"wx:if":parse_OFun(e)},son:[]};
 					anaRecursion(e.consequent.body,{[vname]:nif});
 					pushSon(vname,nif);
 					if(e.alternate){
 						while(e.alternate&&e.alternate.type=="IfStatement"){
 							e=e.alternate;
-							nif={tag:"block",v:{"wx:elif":z[e.test.arguments[0].value]},son:[]};
+							nif={tag:"block",v:{"wx:elif":parse_OFun(e)},son:[]};
 							anaRecursion(e.consequent.body,{[vname]:nif});
 							pushSon(vname,nif);
 						}
