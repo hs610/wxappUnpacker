@@ -295,3 +295,40 @@ _ic(x[{from}],e_,x[{to}],..,..,..,..);
 ```
 
 这样，我们完成了几乎所有 wxapkg包 内容的还原。
+
+### 对`z`数组优化后的支持方法
+
+`wcc-v0.5vv_20180626_syb_zp`后通过只加载`z`数组中需要的部分来提高小程序运行速度，这也会导致仅考虑到上述内容的解包程序解包失败，这一更新的主要内容如下：
+
+- 增加z数组的函数:`_rz` `_2z` `_mz` `_1z` `_oz`
+- 在每个函数头部增加了`var z=gz$gwx_{$id}()`，来标识使用的z数组id
+- 原有的z数组不再存在
+- z数组已以下固定格式出现：
+
+```javascript
+function gz$gwx_{$id}(){
+if( __WXML_GLOBAL__.ops_cached.$gwx_{$id})return __WXML_GLOBAL__.ops_cached.$gwx_{$id}
+__WXML_GLOBAL__.ops_cached.$gwx_{$id}=[];
+(function(z){var a=11;function Z(ops){z.push(ops)}
+
+//... (Z({$content}))
+
+})(__WXML_GLOBAL__.ops_cached.$gwx_{$id});return __WXML_GLOBAL__.ops_cached.$gwx_{$id}
+}
+```
+
+对于上述变更，将获取`z`数组处修改并添加对`_rz` `_2z` `_mz` `_1z` `_oz`的支持即可。
+
+需要注意的是开发版的`z`数组转为如下结构：
+
+```javascript
+(function(z){var a=11;function Z(ops,debugLine){z.push(['11182016',ops,debugLine])}
+//...
+})//...
+```
+
+探测到为开发版后应将获取到的`z`数组仅保留数组中的第二项。
+
+以及含分包的子包采用 `gz$gwx{$subPackageId}_{$id}` 命名，其中`{$subPackageId}`是一个数字。
+
+另外还需要注意，`template`的内容在`try`块外。
