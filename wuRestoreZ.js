@@ -2,7 +2,7 @@ const wu=require("./wuLib.js");
 const {VM}=require('vm2');
 function catchZGroup(code,groupPreStr,cb){
 	const debugPre="(function(z){var a=11;function Z(ops,debugLine){";
-	let zArr=[];
+	let zArr={};
 	for(let preStr of groupPreStr){
 		let content=code.slice(code.indexOf(preStr)),z=[];
 		content=content.slice(content.indexOf("(function(z){var a=11;"));
