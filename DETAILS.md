@@ -331,4 +331,4 @@ __WXML_GLOBAL__.ops_cached.$gwx_{$id}=[];
 
 以及含分包的子包采用 `gz$gwx{$subPackageId}_{$id}` 命名，其中`{$subPackageId}`是一个数字。
 
-另外还需要注意，`template`的内容在`try`块外。
+另外还需要注意，`template`的 `var z=gz$gwx_{$id}` 在`try`块外。
