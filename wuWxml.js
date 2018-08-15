@@ -5,6 +5,7 @@ const fs=require('fs');
 const path=require("path");
 const esprima=require('esprima');
 const {VM}=require('vm2');
+const escodegen=require('escodegen');
 function analyze(core,z,namePool,xPool,fakePool={},zMulName="0"){
 	function anaRecursion(core,fakePool={}){
 		return analyze(core,z,namePool,xPool,fakePool,zMulName);
@@ -38,7 +39,7 @@ function analyze(core,z,namePool,xPool,fakePool={},zMulName="0"){
 								let item=f.arguments[6].value;//def:item
 								let index=f.arguments[7].value;//def:index
 								let data=z[f.arguments[0].value];
-								let key=f.arguments[8].value;//def:""
+								let key=escodegen.generate(f.arguments[8]).slice(1,-1);//f.arguments[8].value;//def:""
 								let obj=namePool[f.arguments[5].name];
 								let gen=namePool[f.arguments[1].name];
 								if(gen.tag=="gen"){
@@ -56,7 +57,7 @@ function analyze(core,z,namePool,xPool,fakePool={},zMulName="0"){
 								let item=f.arguments[7].value;//def:item
 								let index=f.arguments[8].value;//def:index
 								let data=z.mul[zMulName][f.arguments[1].value];
-								let key=f.arguments[9].value;//def:""
+								let key=escodegen.generate(f.arguments[9]).slice(1,-1);//f.arguments[9].value;//def:""
 								let obj=namePool[f.arguments[6].name];
 								let gen=namePool[f.arguments[2].name];
 								if(gen.tag=="gen"){
@@ -237,7 +238,7 @@ function analyze(core,z,namePool,xPool,fakePool={},zMulName="0"){
 	}
 }
 function wxmlify(str,isText){
-	if(typeof str=="undefined"||str===null)throw Error("Empty str in "+(isText?"text":"prop"));
+	if(typeof str=="undefined"||str===null)return "Empty";//throw Error("Empty str in "+(isText?"text":"prop"));
 	if(isText)return str;//may have some bugs in some specific case(undocumented by tx)
 	else return str.replace(/"/g, '\\"');
 }

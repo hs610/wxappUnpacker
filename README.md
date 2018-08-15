@@ -50,6 +50,7 @@ Android 手机最近使用过的微信小程序所对应的 wxapkg 包文件都�
     npm install vm2 -g
     npm install uglify-es -g
     npm install js-beautify -g
+    npm install escodegen -g
 
 此外，这些 node.js 程序之间也有一定的依赖关系，比如他们都依赖于 wuLib.js 。
 
