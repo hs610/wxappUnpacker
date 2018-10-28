@@ -376,7 +376,8 @@ function doFrame(name,cb,order){
 				for(let deps in now){
 					let ref=now[deps]();
 					if(ref.includes(":"))res.push("<wxs module=\""+deps+"\">\n"+doWxs(requireInfo[ref].toString())+"\n</wxs>");
-					else res.push("<wxs module=\""+deps+"\" src=\""+wu.toDir(pF[ref],info)+"\" />");
+					else if(pF[ref])res.push("<wxs module=\""+deps+"\" src=\""+wu.toDir(pF[ref],info)+"\" />");
+					else res.push("<wxs module=\""+deps+"\" src=\""+wu.toDir(ref.slice(2),info)+"\" />");
 					wxsList[name]=res.join("\n");
 				}
 			}
