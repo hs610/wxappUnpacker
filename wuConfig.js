@@ -31,6 +31,7 @@ function doConfig(configFile,cb){
 			app.subPackages=e.subPackages;
 			console.log("=======================================================\nNOTICE: SubPackages exist in this package.\nDetails: ",app.subPackages,"\n=======================================================");
 		}
+		if(e.navigateToMiniProgramAppIdList)app.navigateToMiniProgramAppIdList=e.navigateToMiniProgramAppIdList;
 		if(fs.existsSync(path.resolve(dir,"workers.js")))app.workers=getWorkerPath(path.resolve(dir,"workers.js"));
 		if(e.extAppid)
 			wu.save(path.resolve(dir,'ext.json'),JSON.stringify({extEnable:true,extAppid:e.extAppid,ext:e.ext},null,4));
