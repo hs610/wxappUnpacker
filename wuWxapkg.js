@@ -173,7 +173,7 @@ function packDone(dir, cb, order) {
             }
         }
         if (!doSubPkg) {
-            throw new Error("This pkg may be a sub pkg, please add -s=Main Dir, like: node wuWxapkg.js -s=./testpkg/test/ ./testpkg/test-pkg-sub.wxapkg");
+            throw new Error("检测到此包是分包后的子包, 请通过 -s 参数指定存放路径后重试, 如 node wuWxapkg.js -s=/xxx/xxx ./testpkg/test-pkg-sub.wxapkg");
         }
     }
 }
