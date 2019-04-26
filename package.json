@@ -12,6 +12,13 @@
   "bugs": {
     "url": "https://github.com/qwerty472123/wxappUnpacker/issues"
   },
+  "scripts": {
+    "pkg": "node wuWxapkg.js",
+    "css": "node wuWxss.js",
+    "xml": "node wuWxml.js",
+    "js": "node wuJs.js",
+    "cfg": "node wuConfig.js"
+  },
   "homepage": "https://github.com/qwerty472123/wxappUnpacker#readme",
   "dependencies": {
     "cheerio": "^1.0.0-rc.3",
