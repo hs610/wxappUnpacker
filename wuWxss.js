@@ -254,7 +254,7 @@ function doWxss(dir, cb, mainDir, nowDir) {
                     if (importCnt[id] <= 1) {
                         console.log("Cannot find pure import for _C[" + id + "] which is only imported " + importCnt[id] + " times. Let importing become copying.");
                     } else {
-                        let newFile = path.resolve(dir, "__wuBaseWxss__/" + id + ".wxss");
+                        let newFile = path.resolve(saveDir, "__wuBaseWxss__/" + id + ".wxss");
                         console.log("Cannot find pure import for _C[" + id + "], force to save it in (" + newFile + ").");
                         id = Number.parseInt(id);
                         actualPure[id] = newFile;
