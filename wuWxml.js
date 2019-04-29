@@ -368,9 +368,11 @@ function tryWxml(dir, name, code, z, xPool, rDs, ...args) {
     }
 }
 
-function doWxs(code) {
+function doWxs(code, name) {
+    name = name || '';
+    name = name.substring(0, name.lastIndexOf('/') + 1);
     const before = 'nv_module={nv_exports:{}};';
-    return wxsBeautify(code.slice(code.indexOf(before) + before.length, code.lastIndexOf('return nv_module.nv_exports;}')).replace(/nv\_/g, ''));
+    return wxsBeautify(code.slice(code.indexOf(before) + before.length, code.lastIndexOf('return nv_module.nv_exports;}')).replace(eval('/' + ('p_' + name).replace(/\//g, '\\/') + '/g'), '').replace(/nv\_/g, '').replace(/(require\(.*?\))\(\)/g,'$1'));
 }
 
 function doFrame(name, cb, order, mainDir) {
@@ -399,7 +401,7 @@ function doFrame(name, cb, order, mainDir) {
             for (let info in rF) if (typeof rF[info] == "function") {
                 let name = path.resolve(dir, (info[0] == '/' ? '.' : '') + info), ref = rF[info]();
                 pF[ref] = info;
-                wu.save(name, doWxs(requireInfo[ref].toString()));
+                wu.save(name, doWxs(requireInfo[ref].toString(), info));
             }
             for (let info in rF) if (typeof rF[info] == "object") {
                 let name = path.resolve(dir, (info[0] == '/' ? '.' : '') + info);
