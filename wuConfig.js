@@ -50,7 +50,6 @@ function doConfig(configFile, cb) {
                     let items = page.replace(root, '');
                     newPages.push(items);
                     let subIndex = pages.indexOf(root + items);
-                    console.log(root + items, subIndex);
                     if (subIndex!==-1) {
                         pages.splice(subIndex, 1);
                     }
@@ -97,6 +96,10 @@ function doConfig(configFile, cb) {
         for (let a in e.page) {
             let fileName = path.resolve(dir, wu.changeExt(a, ".json"));
             wu.save(fileName, JSON.stringify(e.page[a].window, null, 4));
+            if (configFile == fileName) delWeight = 0;
+        }
+        for (let subPackage of app.subPackages) {
+            let a = subPackage.root + subPackage.items;
             //添加默认的 wxs, wxml, wxss
             let jsName = wu.changeExt(a, ".js");
             let fileNameOfWxs = path.resolve(dir, jsName);
@@ -107,8 +110,8 @@ function doConfig(configFile, cb) {
             let cssName = wu.changeExt(a, ".wxss");
             let fileNameOfWxss = path.resolve(dir, cssName);
             wu.save(fileNameOfWxss, "/* " + cssName + " */");
-            if (configFile == fileName) delWeight = 0;
         }
+
         if (app.tabBar && app.tabBar.list) wu.scanDirByExt(dir, "", li => {//search all files
             let digests = [], digestsEvent = new wu.CntEvent, rdir = path.resolve(dir);
 
