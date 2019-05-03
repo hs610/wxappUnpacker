@@ -100,17 +100,21 @@ function doConfig(configFile, cb) {
         }
         if (app.subPackages) {
             for (let subPackage of app.subPackages) {
-                let a = subPackage.root + subPackage.items;
-                //添加默认的 wxs, wxml, wxss
-                let jsName = wu.changeExt(a, ".js");
-                let fileNameOfWxs = path.resolve(dir, jsName);
-                wu.save(fileNameOfWxs, "// " + jsName + "\nPage({data: {}})");
-                let wxmlName = wu.changeExt(a, ".wxml");
-                let fileNameOfWxml = path.resolve(dir, wxmlName);
-                wu.save(fileNameOfWxml, "<!--" + wxmlName + "--><text>" + wxmlName + "</text>");
-                let cssName = wu.changeExt(a, ".wxss");
-                let fileNameOfWxss = path.resolve(dir, cssName);
-                wu.save(fileNameOfWxss, "/* " + cssName + " */");
+                if (subPackage.pages) {
+                    for (let item of subPackage.pages) {
+                        let a = subPackage.root + item;
+                        //添加默认的 wxs, wxml, wxss
+                        let jsName = wu.changeExt(a, ".js");
+                        let fileNameOfWxs = path.resolve(dir, jsName);
+                        wu.save(fileNameOfWxs, "// " + jsName + "\nPage({data: {}})");
+                        let wxmlName = wu.changeExt(a, ".wxml");
+                        let fileNameOfWxml = path.resolve(dir, wxmlName);
+                        wu.save(fileNameOfWxml, "<!--" + wxmlName + "--><text>" + wxmlName + "</text>");
+                        let cssName = wu.changeExt(a, ".wxss");
+                        let fileNameOfWxss = path.resolve(dir, cssName);
+                        wu.save(fileNameOfWxss, "/* " + cssName + " */");
+                    }
+                }
             }
         }
 
