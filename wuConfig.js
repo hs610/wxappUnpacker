@@ -50,7 +50,7 @@ function doConfig(configFile, cb) {
                     let items = page.replace(root, '');
                     newPages.push(items);
                     let subIndex = pages.indexOf(root + items);
-                    if (subIndex!==-1) {
+                    if (subIndex !== -1) {
                         pages.splice(subIndex, 1);
                     }
                 }
@@ -102,7 +102,7 @@ function doConfig(configFile, cb) {
             for (let subPackage of app.subPackages) {
                 if (subPackage.pages) {
                     for (let item of subPackage.pages) {
-                        let a = subPackage.root + item;
+                        let a = subPackage.root + item + '.xx';
                         //添加默认的 wxs, wxml, wxss
                         let jsName = wu.changeExt(a, ".js");
                         let fileNameOfWxs = path.resolve(dir, jsName);
